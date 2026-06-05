@@ -5,10 +5,9 @@ Description: Client for interacting with Anthropic models
 
 @author Derek Garcia
 """
+from openai import AuthenticationError, NotFoundError, PermissionDeniedError
 
-from openai import AuthenticationError
-
-from llumpy.exeception import InvalidAPIKeyException
+from llumpy.exeception import InvalidAPIKeyError, ModelNotFoundError
 from llumpy.model_client import ModelClient, _load_api_key, AsyncModelClient
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
@@ -29,16 +28,22 @@ class AnthropicClient(ModelClient):
         """
         super().__init__(model_name, _load_api_key(ANTHROPIC_API_KEY_ENV), ANTHROPIC_BASE_URL)
 
-    def verify_api_key(self) -> None:
+    def validate(self) -> None:
         """
         Verify Anthropic key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If Anthropic key does not have access to requested model
+        :raises InvalidAPIKeyException: If the Anthropic key is invalid
+        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
-            self._model_client.models.retrieve(self._model)
+            self.prompt([{"role": "user", "content": "hi"}], max_tokens=1)
         except AuthenticationError as e:
-            raise InvalidAPIKeyException('Anthropic') from e
+            raise InvalidAPIKeyError('Anthropic') from e
+        except NotFoundError as e:
+            raise ModelNotFoundError('Anthropic', self.model) from e
+        except PermissionDeniedError as e:
+            raise e
 
 
 class AsyncAnthropicClient(AsyncModelClient):
@@ -55,13 +60,19 @@ class AsyncAnthropicClient(AsyncModelClient):
         """
         super().__init__(model_name, _load_api_key(ANTHROPIC_API_KEY_ENV), ANTHROPIC_BASE_URL)
 
-    async def verify_api_key(self) -> None:
+    async def validate(self) -> None:
         """
         Verify Anthropic key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If Anthropic key does not have access to requested model
+        :raises InvalidAPIKeyException: If the Anthropic key is invalid
+        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
-            await self._model_client.models.retrieve(self._model)
+            await self.prompt([{"role": "user", "content": "hi"}], max_tokens=1)
         except AuthenticationError as e:
-            raise InvalidAPIKeyException('Anthropic') from e
+            raise InvalidAPIKeyError('Anthropic') from e
+        except NotFoundError as e:
+            raise ModelNotFoundError('Anthropic', self.model) from e
+        except PermissionDeniedError as e:
+            raise e

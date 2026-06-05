@@ -51,8 +51,8 @@ class ModelClient(_ModelClientBase, ABC):
         self._model_client = OpenAI(**self._params)
 
     @abstractmethod
-    def verify_api_key(self) -> None:
-        """Verify API key"""
+    def validate(self) -> None:
+        """Verify params are valid"""
         pass
 
     def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> ChatCompletion:
@@ -87,8 +87,8 @@ class AsyncModelClient(_ModelClientBase, ABC):
         self._model_client = AsyncOpenAI(**self._params)
 
     @abstractmethod
-    async def verify_api_key(self) -> None:
-        """Verify API key"""
+    async def validate(self) -> None:
+        """Verify params are valid"""
         pass
 
     async def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> ChatCompletion:
