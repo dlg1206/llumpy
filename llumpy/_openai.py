@@ -1,11 +1,14 @@
 """
 File: _openai.py
 
-Description: Client for interacting with OpenAI models
+Description: Client for interacting with OpenAI API
 
 @author Derek Garcia
 """
-from openai import AuthenticationError, NotFoundError, PermissionDeniedError
+from typing import List, Any
+
+from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI
+from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
 from llumpy.exeception import InvalidAPIKeyError, ModelNotFoundError
 from llumpy.model_client import ModelClient, AsyncModelClient, _load_api_key
@@ -15,18 +18,48 @@ OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 
 class OpenAIClient(ModelClient):
-    """
-    Interface for using OpenAI models
-    """
+    """Client interface for interacting with OpenAI API"""
 
-    def __init__(self, model_name: str):
+    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
         """
-        Create new client for use with OpenAI LLMs
+        Initialize connection to OpenAI compatible server
 
-        :param model_name: Name of OpenAI model to use
-        :raises EnvironmentError: If the 'OPENAI_API_KEY' env var is not defined
+        :param model: LLM to use
+        :param api_key: API key to use (Default: OPENAI_API_KEY_ENV)
+        :param base_url: URL of api server (Default: OpenAI)
+        :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
         """
-        super().__init__(model_name, _load_api_key(OPENAI_API_KEY_ENV), OPENAI_BASE_URL)
+        super().__init__(model)
+        params = {'api_key': api_key if api_key else _load_api_key(OPENAI_API_KEY_ENV)}
+        if base_url:
+            params['base_url'] = base_url
+        self._model_client = OpenAI(**params)
+
+    def prompt_completion(self, messages: List[Any], **prompt_kwargs: Any) \
+            -> ChatCompletion | Stream[ChatCompletionChunk]:
+        """
+        Prompt a model for OpenAI chat completion
+
+        :param messages: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat completion or stream
+        """
+        return self._model_client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            **prompt_kwargs
+        )
+
+    def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param messages: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        completion = self.prompt_completion(messages, stream=False, **prompt_kwargs)
+        return completion.choices[0].message.content
 
     def validate(self) -> None:
         """
@@ -47,18 +80,47 @@ class OpenAIClient(ModelClient):
 
 
 class AsyncOpenAIClient(AsyncModelClient):
-    """
-    Async interface for using OpenAI models
-    """
+    """Async client interface for interacting with OpenAI API"""
 
-    def __init__(self, model_name: str):
+    def __init__(self, model: str, api_key: str = None, base_url: str = None):
         """
-        Create new async client for use with OpenAI LLMs
+        Initialize connection to OpenAI compatible server
 
-        :param model_name: Name of OpenAI model to use
-        :raises EnvironmentError: If the 'OPENAI_API_KEY' env var is not defined
+        :param model: LLM to use
+        :param api_key: API key to use (Default: None)
+        :param base_url: URL of api server (Default: OpenAI)
         """
-        super().__init__(model_name, _load_api_key(OPENAI_API_KEY_ENV), OPENAI_BASE_URL)
+        super().__init__(model)
+        params = {'api_key': api_key if api_key else _load_api_key(OPENAI_API_KEY_ENV)}
+        if base_url:
+            params['base_url'] = base_url
+        self._model_client = AsyncOpenAI(**params)
+
+    async def prompt_completion(self, messages: List[Any], **prompt_kwargs: Any) \
+            -> ChatCompletion | Stream[ChatCompletionChunk]:
+        """
+        Prompt a model for OpenAI chat completion
+
+        :param messages: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat completion or stream
+        """
+        return await self._model_client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            **prompt_kwargs
+        )
+
+    async def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param messages: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        completion = await self.prompt_completion(messages, stream=False, **prompt_kwargs)
+        return completion.choices[0].message.content
 
     async def validate(self) -> None:
         """
