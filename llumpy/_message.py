@@ -30,6 +30,21 @@ class Message:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class Conversation:
+    """Immutable conversation for LLM"""
+    messages: List[Message]
+
+    def to_dicts(self) -> List[Dict]:
+        return [m.to_dict() for m in self.messages]
+
+    def __iter__(self):
+        return iter(self.messages)
+
+    def __len__(self):
+        return len(self.messages)
+
+
 class ConversationBuilder:
     """Conversation builder to ensure messages are in a valid order"""
 
@@ -49,6 +64,15 @@ class ConversationBuilder:
         self._messages.append(Message(Role.SYSTEM, content))
         return ConversationBuilder._UserStep(self)
 
+    def system_from_file(self, file: str) -> "ConversationBuilder._UserStep":
+        """
+        Add a system message from file
+
+        :param file: File to read content from
+        :return: User step
+        """
+        return self.system(_read_file(file))
+
     def user(self, content: str) -> "ConversationBuilder._AssistantOrBuildStep":
         """
         Add a user message
@@ -59,11 +83,20 @@ class ConversationBuilder:
         self._messages.append(Message(Role.USER, content))
         return ConversationBuilder._AssistantOrBuildStep(self)
 
-    def build(self) -> List[Message]:
+    def user_from_file(self, file: str) -> "ConversationBuilder._AssistantOrBuildStep":
         """
-        :return: List of messages
+        Add a user message from file
+
+        :param file: File to read content from
+        :return: Assistant or build step
         """
-        return self._messages
+        return self.user(_read_file(file))
+
+    def build(self) -> Conversation:
+        """
+        :return: Immutable conversation
+        """
+        return Conversation(self._messages)
 
     class _UserStep:
         """User turn in the conversation"""
@@ -85,6 +118,15 @@ class ConversationBuilder:
             """
             return self._builder.user(content)
 
+        def user_from_file(self, file: str) -> "ConversationBuilder._AssistantOrBuildStep":
+            """
+            Add a user message from file
+
+            :param file: File to read content from
+            :return: Assistant or build step
+            """
+            return self.user(_read_file(file))
+
     class _AssistantOrBuildStep:
         """Assistant or build step in the conversation"""
 
@@ -105,8 +147,28 @@ class ConversationBuilder:
             self._builder._messages.append(Message(Role.ASSISTANT, content))
             return ConversationBuilder._UserStep(self._builder)
 
-        def build(self) -> List[Message]:
+        def assistant_from_file(self, file: str) -> "ConversationBuilder._UserStep":
+            """
+            Add an assistant message from file
+
+            :param file: File to read content from
+            :return: User step
+            """
+            return self.assistant(_read_file(file))
+
+        def build(self) -> Conversation:
             """
             :return: List of messages
             """
             return self._builder.build()
+
+
+def _read_file(file: str) -> str:
+    """
+    Read content of a file
+
+    :param file: Path to file
+    :return: File content
+    """
+    with open(file, 'r') as f:
+        return f.read()
