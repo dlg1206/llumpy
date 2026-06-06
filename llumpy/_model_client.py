@@ -7,7 +7,9 @@ Description: Generic models for clients
 """
 import os
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any
+
+from llumpy._message import Conversation
 
 
 class ModelClient(ABC):
@@ -22,8 +24,13 @@ class ModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str:
+    def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
         """Simple prompt to get LLM text response"""
+        pass
+
+    @abstractmethod
+    def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str:
+        """Prompt using a conversation to get LLM text response"""
         pass
 
     @abstractmethod
@@ -48,8 +55,13 @@ class AsyncModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    async def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str:
+    async def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
         """Simple prompt to get LLM text response"""
+        pass
+
+    @abstractmethod
+    async def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str:
+        """Prompt using a conversation to get LLM text response"""
         pass
 
     @abstractmethod

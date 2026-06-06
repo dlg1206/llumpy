@@ -11,6 +11,7 @@ from openai import AuthenticationError, NotFoundError, PermissionDeniedError, St
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
 from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
+from llumpy._message import Conversation, ConversationBuilder
 from llumpy._model_client import ModelClient, AsyncModelClient, _load_api_key
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
@@ -35,30 +36,43 @@ class OpenAIClient(ModelClient):
             params['base_url'] = base_url
         self._model_client = OpenAI(**params)
 
-    def prompt_completion(self, messages: List[Any], **prompt_kwargs: Any) \
-            -> ChatCompletion | Stream[ChatCompletionChunk]:
+    def prompt_completion(self,
+                          conversation: Conversation,
+                          **prompt_kwargs: Any) -> ChatCompletion | Stream[ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 
-        :param messages: Messages to send to llm
+        :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
         :return: Chat completion or stream
         """
+        messages: List[Any] = conversation.to_dicts()
         return self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
             **prompt_kwargs
         )
 
-    def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str | None:
+    def prompt_one(self, message: str, **prompt_kwargs: Any) -> str | None:
         """
         Prompt a model for simple text return
 
-        :param messages: Messages to send to llm
+        :param message: Message to send to LLM
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text
         """
-        completion = self.prompt_completion(messages, stream=False, **prompt_kwargs)
+        completion = self.prompt_completion(ConversationBuilder().user(message).build(), stream=False, **prompt_kwargs)
+        return completion.choices[0].message.content
+
+    def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        completion = self.prompt_completion(conversation, stream=False, **prompt_kwargs)
         return completion.choices[0].message.content
 
     def validate(self) -> None:
@@ -96,30 +110,44 @@ class AsyncOpenAIClient(AsyncModelClient):
             params['base_url'] = base_url
         self._model_client = AsyncOpenAI(**params)
 
-    async def prompt_completion(self, messages: List[Any], **prompt_kwargs: Any) \
-            -> ChatCompletion | Stream[ChatCompletionChunk]:
+    async def prompt_completion(self,
+                                conversation: Conversation,
+                                **prompt_kwargs: Any) -> ChatCompletion | Stream[ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 
-        :param messages: Messages to send to llm
+        :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
         :return: Chat completion or stream
         """
+        messages: List[Any] = conversation.to_dicts()
         return await self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
             **prompt_kwargs
         )
 
-    async def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str | None:
+    async def prompt_one(self, message: str, **prompt_kwargs: Any) -> str | None:
         """
         Prompt a model for simple text return
 
-        :param messages: Messages to send to llm
+        :param message: Message to send to LLM
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text
         """
-        completion = await self.prompt_completion(messages, stream=False, **prompt_kwargs)
+        completion = await self.prompt_completion(ConversationBuilder().user(message).build(), stream=False,
+                                                  **prompt_kwargs)
+        return completion.choices[0].message.content
+
+    async def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        completion = await self.prompt_completion(conversation, stream=False, **prompt_kwargs)
         return completion.choices[0].message.content
 
     async def validate(self) -> None:

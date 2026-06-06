@@ -12,6 +12,7 @@ from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockS
     RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent
 
 from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
+from llumpy._message import Conversation, ConversationBuilder
 from llumpy._model_client import ModelClient, _load_api_key, AsyncModelClient
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
@@ -32,33 +33,49 @@ class AnthropicClient(ModelClient):
         super().__init__(model)
         self._model_client = Anthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    def prompt_message(self, messages: List[Any], **prompt_kwargs: Any) \
+    def prompt_message(self, conversation: Conversation, **prompt_kwargs: Any) \
             -> Message | Stream[
                 RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
         """
         Prompt a model for Anthropic chat completion
 
-        :param messages: Messages to send to llm
+        :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
         :return: Chat completion or stream
         """
+        messages: List[Any] = conversation.to_dicts()
+        system = next((m['content'] for m in messages if m['role'] == 'system'), None)
+        non_system = [m for m in messages if m['role'] != 'system']
+
         return self._model_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
-            messages=messages,
+            messages=non_system,
+            **({"system": system} if system else {}),
             **prompt_kwargs
         )
 
-    def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str:
+    def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
         """
         Prompt a model for simple text return
 
-        :param messages: Messages to send to llm
+        :param message: Message to send to LLM
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text
         """
-        message = self.prompt_message(messages, stream=False, **prompt_kwargs)
-        return message.content[0].text
+        msg = self.prompt_message(ConversationBuilder().user(message).build(), stream=False, **prompt_kwargs)
+        return msg.content[0].text
+
+    def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        msg = self.prompt_message(conversation, stream=False, **prompt_kwargs)
+        return msg.content[0].text
 
     def validate(self) -> None:
         """
@@ -69,7 +86,7 @@ class AnthropicClient(ModelClient):
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
-            self.prompt([{"role": "user", "content": "hi"}], max_tokens=1)
+            self.prompt_one('hi', max_tokens=1)
         except AuthenticationError as e:
             raise InvalidAPIKeyError('Anthropic') from e
         except NotFoundError as e:
@@ -91,33 +108,49 @@ class AsyncAnthropicClient(AsyncModelClient):
         super().__init__(model)
         self._model_client = AsyncAnthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    async def prompt_message(self, messages: List[Any], **prompt_kwargs: Any) \
+    async def prompt_message(self, conversation: Conversation, **prompt_kwargs: Any) \
             -> Message | Stream[
                 RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
         """
         Prompt a model for Anthropic chat completion
 
-        :param messages: Messages to send to llm
+        :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
         :return: Chat completion or stream
         """
-        return self._model_client.messages.create(
+        messages: List[Any] = conversation.to_dicts()
+        system = next((m['content'] for m in messages if m['role'] == 'system'), None)
+        non_system = [m for m in messages if m['role'] != 'system']
+
+        return await self._model_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
-            messages=messages,
+            messages=non_system,
+            **({"system": system} if system else {}),
             **prompt_kwargs
         )
 
-    async def prompt(self, messages: List[Any], **prompt_kwargs: Any) -> str:
+    async def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
         """
         Prompt a model for simple text return
 
-        :param messages: Messages to send to llm
+        :param message: Message to send to LLM
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text
         """
-        message = await self.prompt_message(messages, stream=False, **prompt_kwargs)
-        return message.content[0].text
+        msg = await self.prompt_message(ConversationBuilder().user(message).build(), stream=False, **prompt_kwargs)
+        return msg.content[0].text
+
+    async def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text
+        """
+        msg = await self.prompt_message(conversation, stream=False, **prompt_kwargs)
+        return msg.content[0].text
 
     async def validate(self) -> None:
         """
@@ -128,7 +161,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
-            await self.prompt([{"role": "user", "content": "hi"}], max_tokens=1)
+            await self.prompt_one('hi', max_tokens=1)
         except AuthenticationError as e:
             raise InvalidAPIKeyError('Anthropic') from e
         except NotFoundError as e:

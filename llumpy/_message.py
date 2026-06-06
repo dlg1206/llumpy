@@ -35,7 +35,10 @@ class Conversation:
     """Immutable conversation for LLM"""
     messages: List[Message]
 
-    def to_dicts(self) -> List[Dict]:
+    def to_dicts(self) -> List[Dict[str, str]]:
+        """
+        :return: Messages as dicts for API
+        """
         return [m.to_dict() for m in self.messages]
 
     def __iter__(self):

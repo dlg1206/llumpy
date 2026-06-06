@@ -217,11 +217,3 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
                 if e.response.status_code == 404:
                     raise ModelNotFoundError('Ollama', self._model) from e
                 raise
-
-    @property
-    def model_name(self) -> str:
-        return self._model_name
-
-    @property
-    def model_tag(self) -> str:
-        return self._model_tag
