@@ -1,5 +1,5 @@
 """
-File: exeception.py
+File: _exception.py
 
 Description: Exceptions for llumpy operations
 

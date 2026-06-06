@@ -10,8 +10,8 @@ from typing import List, Any
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
-from llumpy.exeception import InvalidAPIKeyError, ModelNotFoundError
-from llumpy.model_client import ModelClient, AsyncModelClient, _load_api_key
+from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
+from llumpy._model_client import ModelClient, AsyncModelClient, _load_api_key
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 OPENAI_BASE_URL = "https://api.openai.com/v1"
