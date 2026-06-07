@@ -9,8 +9,8 @@ import os
 
 import httpx
 
-from llumpy._exception import ModelNotFoundError
-from llumpy._openai import OpenAIClient, AsyncOpenAIClient
+from llumpy.client._openai import OpenAIClient, AsyncOpenAIClient
+from llumpy.utils._exception import ModelNotFoundError
 
 # ollama details
 DEFAULT_OLLAMA_HOST = "localhost"

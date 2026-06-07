@@ -12,9 +12,9 @@ from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError,
 from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockStartEvent, RawContentBlockStopEvent, \
     RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent, TextBlock
 
-from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
-from llumpy._message import Conversation
-from llumpy._model_client import ModelClient, _load_api_key, AsyncModelClient
+from llumpy.core._message import Conversation
+from llumpy.core._model_client import ModelClient, _load_api_key, AsyncModelClient
+from llumpy.utils._exception import InvalidAPIKeyError, ModelNotFoundError
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
 ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1"

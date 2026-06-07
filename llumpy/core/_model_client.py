@@ -9,8 +9,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from llumpy._message import Conversation, ConversationBuilder
-from llumpy._retry_handler import RetryHandler, DEFAULT_MAX_RETRIES, AsyncRetryHandler
+from llumpy.core._message import Conversation, ConversationBuilder
+from llumpy.utils._retry_handler import RetryHandler, DEFAULT_MAX_RETRIES, AsyncRetryHandler
 
 
 class ModelClient(ABC):

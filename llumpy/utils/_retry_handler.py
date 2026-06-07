@@ -13,7 +13,7 @@ from typing import Any, Dict, Tuple, Type
 
 from openai.types.beta.realtime.conversation_created_event import Conversation
 
-from llumpy._model_client import ModelClient, AsyncModelClient
+from llumpy.core._model_client import ModelClient, AsyncModelClient
 
 JSON_RE = re.compile(r'{[\w\W]*}')
 
