@@ -9,7 +9,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from llumpy._message import Conversation
+from llumpy._message import Conversation, ConversationBuilder
+from llumpy._retry_handler import RetryHandler, DEFAULT_MAX_RETRIES, AsyncRetryHandler
 
 
 class ModelClient(ABC):
@@ -24,14 +25,53 @@ class ModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
-        """Simple prompt to get LLM text response"""
+    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+        """Raw API call, returns vendor-specific response object"""
         pass
 
     @abstractmethod
-    def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str:
-        """Prompt using a conversation to get LLM text response"""
+    def extract_text(self, response: Any) -> str | None:
+        """Extract text from vendor-specific response object"""
         pass
+
+    def prompt_one(self,
+                   message: str,
+                   *,
+                   handler: RetryHandler = None,
+                   retries: int = DEFAULT_MAX_RETRIES,
+                   **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model for simple text return
+
+        :param message: Message to send to LLM
+        :param handler: Optional handler to ensure the response is valid (Default: None)
+        :param retries: Number of retries allowed (Default: 5)
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text or parsed object from retry handler
+        """
+        conversation = ConversationBuilder().user(message).build()
+        return self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
+
+    def prompt_many(self,
+                    conversation: Conversation,
+                    *,
+                    handler: RetryHandler = None,
+                    retries: int = DEFAULT_MAX_RETRIES,
+                    **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param handler: Optional handler to ensure the response is valid (Default: None)
+        :param retries: Number of retries allowed (Default: 5)
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text or parsed object from retry handler
+        """
+        # wrap with handler if provided
+        if handler:
+            return handler.try_prompt(self, conversation, retries, **prompt_kwargs)
+        # else just prompt
+        return self.extract_text(self.prompt(conversation, stream=False, **prompt_kwargs))
 
     @abstractmethod
     def validate(self) -> None:
@@ -55,17 +95,56 @@ class AsyncModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    async def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
-        """Simple prompt to get LLM text response"""
+    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+        """Raw API call, returns vendor-specific response object"""
         pass
 
     @abstractmethod
-    async def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str:
-        """Prompt using a conversation to get LLM text response"""
+    def extract_text(self, response: Any) -> str | None:
+        """Extract text from vendor-specific response object"""
         pass
 
+    async def prompt_one(self,
+                         message: str,
+                         *,
+                         handler: AsyncRetryHandler = None,
+                         retries: int = DEFAULT_MAX_RETRIES,
+                         **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model for simple text return
+
+        :param message: Message to send to LLM
+        :param handler: Optional handler to ensure the response is valid (Default: None)
+        :param retries: Number of retries allowed (Default: 5)
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text or parsed object from retry handler
+        """
+        conversation = ConversationBuilder().user(message).build()
+        return await self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
+
+    async def prompt_many(self,
+                          conversation: Conversation,
+                          *,
+                          handler: AsyncRetryHandler = None,
+                          retries: int = DEFAULT_MAX_RETRIES,
+                          **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model for simple text return
+
+        :param conversation: Conversation with prompt to send to LLM
+        :param handler: Optional handler to ensure the response is valid (Default: None)
+        :param retries: Number of retries allowed (Default: 5)
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text or parsed object from retry handler
+        """
+        # wrap with handler if provided
+        if handler:
+            return await handler.try_prompt(self, conversation, retries, **prompt_kwargs)
+        # else just prompt
+        return self.extract_text(self.prompt(conversation, **prompt_kwargs))
+
     @abstractmethod
-    def validate(self) -> None:
+    async def validate(self) -> None:
         """Validate the client is ready to use"""
         pass
 

@@ -9,10 +9,10 @@ from typing import List, Any
 
 from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic
 from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockStartEvent, RawContentBlockStopEvent, \
-    RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent
+    RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent, TextBlock
 
 from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
-from llumpy._message import Conversation, ConversationBuilder
+from llumpy._message import Conversation
 from llumpy._model_client import ModelClient, _load_api_key, AsyncModelClient
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
@@ -33,7 +33,7 @@ class AnthropicClient(ModelClient):
         super().__init__(model)
         self._model_client = Anthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    def prompt_message(self, conversation: Conversation, **prompt_kwargs: Any) \
+    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) \
             -> Message | Stream[
                 RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
         """
@@ -55,27 +55,15 @@ class AnthropicClient(ModelClient):
             **prompt_kwargs
         )
 
-    def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
+    def extract_text(self, response: Message) -> str | None:
         """
-        Prompt a model for simple text return
+        Extract LLM response text from Anthropic object
 
-        :param message: Message to send to LLM
-        :param prompt_kwargs: kwargs for chat
-        :return: Completed chat response text
+        :param response: Anthropic chat response
+        :return: Text message if present, else None
         """
-        msg = self.prompt_message(ConversationBuilder().user(message).build(), stream=False, **prompt_kwargs)
-        return msg.content[0].text
-
-    def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
-        """
-        Prompt a model for simple text return
-
-        :param conversation: Conversation with prompt to send to LLM
-        :param prompt_kwargs: kwargs for chat
-        :return: Completed chat response text
-        """
-        msg = self.prompt_message(conversation, stream=False, **prompt_kwargs)
-        return msg.content[0].text
+        text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
+        return text_block.text if text_block else None
 
     def validate(self) -> None:
         """
@@ -108,7 +96,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         super().__init__(model)
         self._model_client = AsyncAnthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    async def prompt_message(self, conversation: Conversation, **prompt_kwargs: Any) \
+    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) \
             -> Message | Stream[
                 RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
         """
@@ -130,27 +118,15 @@ class AsyncAnthropicClient(AsyncModelClient):
             **prompt_kwargs
         )
 
-    async def prompt_one(self, message: str, **prompt_kwargs: Any) -> str:
+    def extract_text(self, response: Message) -> str | None:
         """
-        Prompt a model for simple text return
+        Extract LLM response text from Anthropic object
 
-        :param message: Message to send to LLM
-        :param prompt_kwargs: kwargs for chat
-        :return: Completed chat response text
+        :param response: Anthropic chat response
+        :return: Text message if present, else None
         """
-        msg = await self.prompt_message(ConversationBuilder().user(message).build(), stream=False, **prompt_kwargs)
-        return msg.content[0].text
-
-    async def prompt_many(self, conversation: Conversation, **prompt_kwargs: Any) -> str | None:
-        """
-        Prompt a model for simple text return
-
-        :param conversation: Conversation with prompt to send to LLM
-        :param prompt_kwargs: kwargs for chat
-        :return: Completed chat response text
-        """
-        msg = await self.prompt_message(conversation, stream=False, **prompt_kwargs)
-        return msg.content[0].text
+        text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
+        return text_block.text if text_block else None
 
     async def validate(self) -> None:
         """
