@@ -12,9 +12,8 @@ from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError,
 from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockStartEvent, RawContentBlockStopEvent, \
     RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent, TextBlock
 
-from llumpy.core._message import Conversation
-from llumpy.core._model_client import ModelClient, _load_api_key, AsyncModelClient
-from llumpy.utils._exception import InvalidAPIKeyError, ModelNotFoundError
+from ..core import ModelClient, AsyncModelClient, Conversation, load_api_key
+from ..utils import InvalidAPIKeyError, ModelNotFoundError
 
 ANTHROPIC_API_KEY_ENV = "ANTHROPIC_API_KEY"
 ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1"
@@ -32,7 +31,7 @@ class AnthropicClient(ModelClient):
         :raises EnvironmentError: If the 'ANTHROPIC_API_KEY' env var is not defined
         """
         super().__init__(model)
-        self._model_client = Anthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
+        self._model_client = Anthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
 
     def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
@@ -119,7 +118,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         :raises EnvironmentError: If the 'ANTHROPIC_API_KEY' env var is not defined
         """
         super().__init__(model)
-        self._model_client = AsyncAnthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
+        self._model_client = AsyncAnthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
 
     async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """

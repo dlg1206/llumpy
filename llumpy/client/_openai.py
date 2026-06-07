@@ -10,9 +10,8 @@ from typing import List, Any, cast
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
-from llumpy.core._message import Conversation
-from llumpy.core._model_client import ModelClient, AsyncModelClient, _load_api_key
-from llumpy.utils._exception import InvalidAPIKeyError, ModelNotFoundError
+from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key
+from ..utils import InvalidAPIKeyError, ModelNotFoundError
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 OPENAI_BASE_URL = "https://api.openai.com/v1"
@@ -31,7 +30,7 @@ class OpenAIClient(ModelClient):
         :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
         """
         super().__init__(model)
-        params = {'api_key': api_key if api_key else _load_api_key(OPENAI_API_KEY_ENV)}
+        params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
         self._model_client = OpenAI(**params)
@@ -108,7 +107,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
         """
         super().__init__(model)
-        params = {'api_key': api_key if api_key else _load_api_key(OPENAI_API_KEY_ENV)}
+        params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
         self._model_client = AsyncOpenAI(**params)

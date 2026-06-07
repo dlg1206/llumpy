@@ -33,3 +33,15 @@ class ModelNotFoundError(ValueError):
         super().__init__(f"Could not find model '{model_name}' from {provider}")
         self._provider = provider
         self._model_name = model_name
+
+
+class ExceededRetriesError(RuntimeError):
+    """Exceed the number of retries"""
+
+    def __init__(self, attempts: int):
+        """
+        Create new error
+
+        :param attempts: Number of attempts made
+        """
+        self.attempts = attempts

@@ -9,30 +9,13 @@ import json
 import re
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
-from typing import Any, Dict, Tuple, Type
+from typing import Any, Dict, Tuple, Type, Callable, Awaitable
 
-from openai.types.beta.realtime.conversation_created_event import Conversation
-
-from llumpy.core._model_client import ModelClient, AsyncModelClient
+from ._exception import ExceededRetriesError
 
 JSON_RE = re.compile(r'{[\w\W]*}')
 
 DEFAULT_MAX_RETRIES = 5
-
-
-class ExceededRetriesError(RuntimeError):
-    """Exceed the number of retries"""
-
-    def __init__(self, model: str, attempts: int):
-        """
-        Create new error
-
-        :param model: Model prompted
-        :param attempts: Number of attempts made
-        """
-        super().__init__(f"Failed to generate valid response from {model} after {attempts} attempts")
-        self.model = model
-        self.attempts = attempts
 
 
 class _FormatMixIn(ABC):
@@ -53,57 +36,62 @@ class _FormatMixIn(ABC):
 
 class RetryHandler(_FormatMixIn, ABC):
 
-    def try_prompt(self, model: ModelClient, conversation: Conversation, retries: int, **prompt_kwargs) -> Any:
+    def try_prompt(self,
+                   prompt_fn: Callable[[], Any],
+                   extract_fn: Callable[[Any], str | None],
+                   retries: int) -> Any:
         """
         Prompt an LLM to get a valid response
 
-        :param model: LLM to prompt
-        :param conversation: Conversation with prompt to send to LLM
+        :param prompt_fn: Prompt callback function
+        :param extract_fn: Prompt text extraction callback function
         :param retries: Number of retries allowed
-        :param prompt_kwargs: kwargs for chat
         :raises ExceededRetriesError: Exceed the number of permitted retries
         :return: Validated chat response text
         """
         # attempt generation
+        last_exc = None
         for attempt in range(retries):
             try:
                 # prompt the model
-                response = model.extract_text(model.prompt(conversation, stream=False, **prompt_kwargs))
+                response = extract_fn(prompt_fn())
                 if response:
                     return self._format(response)
-            except self._retry_on:
+            except self._retry_on as e:
                 # try again
-                continue
+                last_exc = e
         # failed to prompt
-        raise ExceededRetriesError(model.model, retries)
+        raise ExceededRetriesError(retries) from last_exc
 
 
 class AsyncRetryHandler(_FormatMixIn, ABC):
 
-    async def try_prompt(self, model: AsyncModelClient, conversation: Conversation, retries: int,
-                         **prompt_kwargs) -> Any:
+    async def try_prompt(self,
+                         async_prompt_fn: Callable[[], Awaitable[Any]],
+                         extract_fn: Callable[[Any], str | None],
+                         retries: int) -> Any:
         """
         Prompt an LLM to get a valid response
 
-        :param model: LLM to prompt
-        :param conversation: Conversation with prompt to send to LLM
+        :param async_prompt_fn: Async prompt callback function
+        :param extract_fn: Prompt text extraction callback function
         :param retries: Number of retries allowed
-        :param prompt_kwargs: kwargs for chat
         :raises ExceededRetriesError: Exceed the number of permitted retries
         :return: Validated chat response text
         """
         # attempt generation
+        last_exc = None
         for attempt in range(retries):
             try:
                 # prompt the model
-                response = model.extract_text(await model.prompt(conversation, stream=False, **prompt_kwargs))
+                response = extract_fn(await async_prompt_fn())
                 if response:
                     return self._format(response)
-            except self._retry_on:
+            except self._retry_on as e:
                 # try again
-                continue
+                last_exc = e
         # failed to prompt
-        raise ExceededRetriesError(model.model, retries)
+        raise ExceededRetriesError(retries) from e
 
 
 class JSONRetryHandler(RetryHandler, AsyncRetryHandler):

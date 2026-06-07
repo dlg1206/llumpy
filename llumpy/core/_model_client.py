@@ -9,8 +9,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from llumpy.core._message import Conversation, ConversationBuilder
-from llumpy.utils._retry_handler import RetryHandler, DEFAULT_MAX_RETRIES, AsyncRetryHandler
+from ._message import ConversationBuilder, Conversation
+from ..utils import RetryHandler, AsyncRetryHandler, DEFAULT_MAX_RETRIES
 
 
 class ModelClient(ABC):
@@ -74,7 +74,7 @@ class ModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return handler.try_prompt(self, conversation, retries, **prompt_kwargs)
+            return handler.try_prompt(lambda: self.prompt(conversation, **prompt_kwargs), self.extract_text, retries)
         # else just prompt
         return self.extract_text(self.prompt(conversation, **prompt_kwargs))
 
@@ -149,9 +149,10 @@ class AsyncModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return await handler.try_prompt(self, conversation, retries, **prompt_kwargs)
+            return await handler.try_prompt(lambda: self.prompt(conversation, **prompt_kwargs), self.extract_text,
+                                            retries)
         # else just prompt
-        return self.extract_text(self.prompt(conversation, **prompt_kwargs))
+        return self.extract_text(await self.prompt(conversation, **prompt_kwargs))
 
     @abstractmethod
     async def validate(self) -> None:
@@ -163,7 +164,7 @@ class AsyncModelClient(ABC):
         return self._model
 
 
-def _load_api_key(env_var: str):
+def load_api_key(env_var: str):
     """
     Load API key from env variable
 
