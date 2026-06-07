@@ -5,9 +5,9 @@ Description: Client for interacting with OpenAI API
 
 @author Derek Garcia
 """
-from typing import List, Any
+from typing import List, Any, cast
 
-from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI
+from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
 from llumpy._exception import InvalidAPIKeyError, ModelNotFoundError
@@ -36,7 +36,7 @@ class OpenAIClient(ModelClient):
             params['base_url'] = base_url
         self._model_client = OpenAI(**params)
 
-    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion | Stream[ChatCompletionChunk]:
+    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """
         Prompt a model for OpenAI chat completion
 
@@ -45,11 +45,28 @@ class OpenAIClient(ModelClient):
         :return: Chat completion or stream
         """
         messages: List[Any] = conversation.to_dicts()
-        return self._model_client.chat.completions.create(
+        return cast(ChatCompletion, self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
+            stream=False,
             **prompt_kwargs
-        )
+        ))
+
+    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[ChatCompletionChunk]:
+        """
+        Prompt a model for OpenAI chat completion
+
+        :param conversation: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat stream
+        """
+        messages: List[Any] = conversation.to_dicts()
+        return cast(Stream[ChatCompletionChunk], self._model_client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            stream=True,
+            **prompt_kwargs
+        ))
 
     def extract_text(self, response: ChatCompletion) -> str | None:
         """
@@ -81,13 +98,14 @@ class OpenAIClient(ModelClient):
 class AsyncOpenAIClient(AsyncModelClient):
     """Async client interface for interacting with OpenAI API"""
 
-    def __init__(self, model: str, api_key: str = None, base_url: str = None):
+    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
 
         :param model: LLM to use
         :param api_key: API key to use (Default: None)
         :param base_url: URL of api server (Default: OpenAI)
+        :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
         """
         super().__init__(model)
         params = {'api_key': api_key if api_key else _load_api_key(OPENAI_API_KEY_ENV)}
@@ -95,8 +113,7 @@ class AsyncOpenAIClient(AsyncModelClient):
             params['base_url'] = base_url
         self._model_client = AsyncOpenAI(**params)
 
-    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion | Stream[
-        ChatCompletionChunk]:
+    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """
         Prompt a model for OpenAI chat completion
 
@@ -108,8 +125,25 @@ class AsyncOpenAIClient(AsyncModelClient):
         return await self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
+            stream=False,
             **prompt_kwargs
         )
+
+    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
+        """
+        Prompt a model for OpenAI chat completion
+
+        :param conversation: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat stream
+        """
+        messages: List[Any] = conversation.to_dicts()
+        return cast(AsyncStream[ChatCompletionChunk], self._model_client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            stream=True,
+            **prompt_kwargs
+        ))
 
     def extract_text(self, response: ChatCompletion) -> str | None:
         """

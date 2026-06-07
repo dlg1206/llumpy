@@ -30,6 +30,11 @@ class ModelClient(ABC):
         pass
 
     @abstractmethod
+    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+        """Raw API call, returns vendor-specific response stream object"""
+        pass
+
+    @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
         pass
@@ -71,7 +76,7 @@ class ModelClient(ABC):
         if handler:
             return handler.try_prompt(self, conversation, retries, **prompt_kwargs)
         # else just prompt
-        return self.extract_text(self.prompt(conversation, stream=False, **prompt_kwargs))
+        return self.extract_text(self.prompt(conversation, **prompt_kwargs))
 
     @abstractmethod
     def validate(self) -> None:
@@ -97,6 +102,11 @@ class AsyncModelClient(ABC):
     @abstractmethod
     async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
+        pass
+
+    @abstractmethod
+    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+        """Raw API call, returns vendor-specific response stream object"""
         pass
 
     @abstractmethod

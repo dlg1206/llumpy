@@ -5,9 +5,10 @@ Description: Client for interacting with Anthropic models
 
 @author Derek Garcia
 """
-from typing import List, Any
+from typing import List, Any, cast
 
-from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic
+from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic, \
+    AsyncStream
 from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockStartEvent, RawContentBlockStopEvent, \
     RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent, TextBlock
 
@@ -33,27 +34,51 @@ class AnthropicClient(ModelClient):
         super().__init__(model)
         self._model_client = Anthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) \
-            -> Message | Stream[
+    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
+        """
+        Prompt a model for Anthropic chat completion
+
+        :param conversation: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat completion
+        """
+        messages: List[Any] = conversation.to_dicts()
+        system = next((m['content'] for m in messages if m['role'] == 'system'), None)
+        non_system = [m for m in messages if m['role'] != 'system']
+
+        return cast(Message, self._model_client.messages.create(
+            model=self._model,
+            max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
+            messages=non_system,
+            stream=False,
+            **({"system": system} if system else {}),
+            **prompt_kwargs
+        ))
+
+    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) \
+            -> Stream[
                 RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
         """
         Prompt a model for Anthropic chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
-        :return: Chat completion or stream
+        :return: Chat completion stream
         """
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
 
-        return self._model_client.messages.create(
-            model=self._model,
-            max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
-            messages=non_system,
-            **({"system": system} if system else {}),
-            **prompt_kwargs
-        )
+        return cast(Stream[
+                        RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent],
+                    self._model_client.messages.create(
+                        model=self._model,
+                        max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
+                        messages=non_system,
+                        stream=True,
+                        **({"system": system} if system else {}),
+                        **prompt_kwargs
+                    ))
 
     def extract_text(self, response: Message) -> str | None:
         """
@@ -96,15 +121,13 @@ class AsyncAnthropicClient(AsyncModelClient):
         super().__init__(model)
         self._model_client = AsyncAnthropic(api_key=_load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) \
-            -> Message | Stream[
-                RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
+    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
         Prompt a model for Anthropic chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
-        :return: Chat completion or stream
+        :return: Chat completion
         """
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
@@ -114,9 +137,35 @@ class AsyncAnthropicClient(AsyncModelClient):
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
             messages=non_system,
+            stream=False,
             **({"system": system} if system else {}),
             **prompt_kwargs
         )
+
+    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) \
+            -> AsyncStream[
+                RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
+        """
+        Prompt a model for Anthropic chat completion
+
+        :param conversation: Messages to send to llm
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat completion stream
+        """
+        messages: List[Any] = conversation.to_dicts()
+        system = next((m['content'] for m in messages if m['role'] == 'system'), None)
+        non_system = [m for m in messages if m['role'] != 'system']
+
+        return cast(AsyncStream[
+                        RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent],
+                    self._model_client.messages.create(
+                        model=self._model,
+                        max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
+                        messages=non_system,
+                        stream=True,
+                        **({"system": system} if system else {}),
+                        **prompt_kwargs
+                    ))
 
     def extract_text(self, response: Message) -> str | None:
         """
