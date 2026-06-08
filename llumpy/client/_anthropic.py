@@ -9,7 +9,7 @@ from typing import List, Any, cast
 
 from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic, \
     AsyncStream
-from anthropic.types import Message, TextBlock, RawMessageStreamEvent
+from anthropic.types import Message, TextBlock, RawMessageStreamEvent, RawContentBlockDeltaEvent, TextDelta
 
 from ..core import ModelClient, AsyncModelClient, Conversation, load_api_key
 from ..utils import InvalidAPIKeyError, ModelNotFoundError
@@ -32,7 +32,7 @@ class AnthropicClient(ModelClient):
         super().__init__(model)
         self._model_client = Anthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
+    def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
         Prompt a model for Anthropic chat completion
 
@@ -53,7 +53,7 @@ class AnthropicClient(ModelClient):
             **prompt_kwargs
         ))
 
-    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[RawMessageStreamEvent]:
+    def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[RawMessageStreamEvent]:
         """
         Prompt a model for Anthropic chat completion
 
@@ -75,15 +75,21 @@ class AnthropicClient(ModelClient):
                         **prompt_kwargs
                     ))
 
-    def extract_text(self, response: Message) -> str | None:
+    def extract_text(self, response: Message | RawMessageStreamEvent) -> str | None:
         """
         Extract LLM response text from Anthropic object
-
-        :param response: Anthropic chat response
+        :param response: Anthropic chat response or stream chunk
         :return: Text message if present, else None
         """
-        text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
-        return text_block.text if text_block else None
+        # if message passed is a chunk
+        if isinstance(response, RawContentBlockDeltaEvent):
+            return response.delta.text if isinstance(response.delta, TextDelta) else None
+        # if message passed is a completed message
+        if isinstance(response, Message):
+            text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
+            return text_block.text if text_block else None
+        # invalid response
+        return None
 
     def validate(self) -> None:
         """

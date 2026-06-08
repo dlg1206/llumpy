@@ -25,11 +25,11 @@ class ModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
 
     @abstractmethod
-    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response stream object"""
 
     @abstractmethod
@@ -71,9 +71,9 @@ class ModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return handler.try_prompt(lambda: self.prompt(conversation, **prompt_kwargs), self.extract_text, retries)
+            return handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text, retries)
         # else just prompt
-        return self.extract_text(self.prompt(conversation, **prompt_kwargs))
+        return self.extract_text(self.vendor_prompt(conversation, **prompt_kwargs))
 
     @abstractmethod
     def validate(self) -> None:
@@ -145,7 +145,8 @@ class AsyncModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return await handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text,
+            return await handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs),
+                                            self.extract_text,
                                             retries)
         # else just prompt
         return self.extract_text(await self.vendor_prompt(conversation, **prompt_kwargs))

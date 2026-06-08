@@ -35,7 +35,7 @@ class OpenAIClient(ModelClient):
             params['base_url'] = base_url
         self._model_client = OpenAI(**params)
 
-    def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
+    def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """
         Prompt a model for OpenAI chat completion
 
@@ -51,7 +51,7 @@ class OpenAIClient(ModelClient):
             **prompt_kwargs
         ))
 
-    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[ChatCompletionChunk]:
+    def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 
@@ -67,14 +67,15 @@ class OpenAIClient(ModelClient):
             **prompt_kwargs
         ))
 
-    def extract_text(self, response: ChatCompletion) -> str | None:
+    def extract_text(self, response: ChatCompletion | ChatCompletionChunk) -> str | None:
         """
         Extract LLM response text from OpenAI object
 
         :param response: OpenAI chat response
         :return: Text message if present, else None
         """
-        return response.choices[0].message.content
+        return response.choices[0].delta.content \
+            if isinstance(response, ChatCompletionChunk) else response.choices[0].message.content
 
     def validate(self) -> None:
         """
@@ -128,7 +129,8 @@ class AsyncOpenAIClient(AsyncModelClient):
             **prompt_kwargs
         )
 
-    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
+    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[
+        ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 
