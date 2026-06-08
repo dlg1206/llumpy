@@ -27,17 +27,14 @@ class ModelClient(ABC):
     @abstractmethod
     def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
-        pass
 
     @abstractmethod
     def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response stream object"""
-        pass
 
     @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
-        pass
 
     def prompt_one(self,
                    message: str,
@@ -81,10 +78,12 @@ class ModelClient(ABC):
     @abstractmethod
     def validate(self) -> None:
         """Validate the client is ready to use"""
-        pass
 
     @property
     def model(self) -> str:
+        """
+        :return: Name of the model
+        """
         return self._model
 
 
@@ -100,19 +99,16 @@ class AsyncModelClient(ABC):
         self._model = model
 
     @abstractmethod
-    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
-        pass
 
     @abstractmethod
-    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response stream object"""
-        pass
 
     @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
-        pass
 
     async def prompt_one(self,
                          message: str,
@@ -149,18 +145,20 @@ class AsyncModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return await handler.try_prompt(lambda: self.prompt(conversation, **prompt_kwargs), self.extract_text,
+            return await handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text,
                                             retries)
         # else just prompt
-        return self.extract_text(await self.prompt(conversation, **prompt_kwargs))
+        return self.extract_text(await self.vendor_prompt(conversation, **prompt_kwargs))
 
     @abstractmethod
     async def validate(self) -> None:
         """Validate the client is ready to use"""
-        pass
 
     @property
     def model(self) -> str:
+        """
+        :return: Name of the model
+        """
         return self._model
 
 

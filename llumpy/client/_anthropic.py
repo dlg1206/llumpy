@@ -9,8 +9,7 @@ from typing import List, Any, cast
 
 from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic, \
     AsyncStream
-from anthropic.types import Message, RawContentBlockDeltaEvent, RawContentBlockStartEvent, RawContentBlockStopEvent, \
-    RawMessageDeltaEvent, RawMessageStartEvent, RawMessageStopEvent, TextBlock
+from anthropic.types import Message, TextBlock, RawMessageStreamEvent
 
 from ..core import ModelClient, AsyncModelClient, Conversation, load_api_key
 from ..utils import InvalidAPIKeyError, ModelNotFoundError
@@ -54,9 +53,7 @@ class AnthropicClient(ModelClient):
             **prompt_kwargs
         ))
 
-    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) \
-            -> Stream[
-                RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
+    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[RawMessageStreamEvent]:
         """
         Prompt a model for Anthropic chat completion
 
@@ -68,8 +65,7 @@ class AnthropicClient(ModelClient):
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
 
-        return cast(Stream[
-                        RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent],
+        return cast(Stream[RawMessageStreamEvent],
                     self._model_client.messages.create(
                         model=self._model,
                         max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
@@ -120,7 +116,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         super().__init__(model)
         self._model_client = AsyncAnthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
 
-    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
+    async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
         Prompt a model for Anthropic chat completion
 
@@ -141,9 +137,9 @@ class AsyncAnthropicClient(AsyncModelClient):
             **prompt_kwargs
         )
 
-    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) \
-            -> AsyncStream[
-                RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent]:
+    async def vendor_prompt_stream(self,
+                                   conversation: Conversation,
+                                   **prompt_kwargs: Any) -> AsyncStream[RawMessageStreamEvent]:
         """
         Prompt a model for Anthropic chat completion
 
@@ -155,8 +151,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
 
-        return cast(AsyncStream[
-                        RawMessageStartEvent | RawMessageDeltaEvent | RawMessageStopEvent | RawContentBlockStartEvent | RawContentBlockDeltaEvent | RawContentBlockStopEvent],
+        return cast(AsyncStream[RawMessageStreamEvent],
                     self._model_client.messages.create(
                         model=self._model,
                         max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),

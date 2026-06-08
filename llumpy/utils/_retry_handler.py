@@ -31,10 +31,10 @@ class _FormatMixIn(ABC):
     @abstractmethod
     def _format(self, response: str) -> Any:
         """Attempt to format the response to validate it and raise an exception"""
-        pass
 
 
 class RetryHandler(_FormatMixIn, ABC):
+    """Retry handler to validate LLM responses"""
 
     def try_prompt(self,
                    prompt_fn: Callable[[], Any],
@@ -51,7 +51,7 @@ class RetryHandler(_FormatMixIn, ABC):
         """
         # attempt generation
         last_exc = None
-        for attempt in range(retries):
+        for _ in range(retries):
             try:
                 # prompt the model
                 response = extract_fn(prompt_fn())
@@ -65,6 +65,7 @@ class RetryHandler(_FormatMixIn, ABC):
 
 
 class AsyncRetryHandler(_FormatMixIn, ABC):
+    """Async retry handler to validate LLM responses"""
 
     async def try_prompt(self,
                          async_prompt_fn: Callable[[], Awaitable[Any]],
@@ -81,7 +82,7 @@ class AsyncRetryHandler(_FormatMixIn, ABC):
         """
         # attempt generation
         last_exc = None
-        for attempt in range(retries):
+        for _ in range(retries):
             try:
                 # prompt the model
                 response = extract_fn(await async_prompt_fn())
@@ -91,7 +92,7 @@ class AsyncRetryHandler(_FormatMixIn, ABC):
                 # try again
                 last_exc = e
         # failed to prompt
-        raise ExceededRetriesError(retries) from e
+        raise ExceededRetriesError(retries) from last_exc
 
 
 class JSONRetryHandler(RetryHandler, AsyncRetryHandler):

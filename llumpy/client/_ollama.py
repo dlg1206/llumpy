@@ -14,7 +14,7 @@ from ..utils import ModelNotFoundError
 
 # ollama details
 DEFAULT_OLLAMA_HOST = "localhost"
-DEFAULT_OLLAMA_PORT = 11434
+DEFAULT_OLLAMA_PORT = "11434"
 
 # endpoints
 MODEL_LIBRARY = "https://ollama.com/library"
@@ -65,10 +65,16 @@ class _OllamaClientMixin:
 
     @property
     def model_name(self) -> str:
+        """
+        :return: Name of model
+        """
         return self._model_name
 
     @property
     def model_tag(self) -> str:
+        """
+        :return: Tag of model
+        """
         return self._model_tag
 
 

@@ -112,7 +112,7 @@ class AsyncOpenAIClient(AsyncModelClient):
             params['base_url'] = base_url
         self._model_client = AsyncOpenAI(**params)
 
-    async def prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
+    async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """
         Prompt a model for OpenAI chat completion
 
@@ -128,7 +128,7 @@ class AsyncOpenAIClient(AsyncModelClient):
             **prompt_kwargs
         )
 
-    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
+    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 

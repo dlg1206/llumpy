@@ -173,5 +173,5 @@ def _read_file(file: str) -> str:
     :param file: Path to file
     :return: File content
     """
-    with open(file, 'r') as f:
+    with open(file, 'r', encoding='utf-8') as f:
         return f.read()
