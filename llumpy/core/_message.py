@@ -5,9 +5,10 @@ Description: Model for messages to send to LLMs
 
 @author Derek Garcia
 """
+from abc import ABC
 from dataclasses import dataclass, asdict
 from enum import StrEnum
-from typing import List, Dict
+from typing import List, Dict, Literal
 
 
 class Role(StrEnum):
@@ -48,6 +49,37 @@ class Conversation:
         return len(self.messages)
 
 
+class _BuildMixIn(ABC):
+    def __init__(self, messages: List[Message]):
+        """
+        Create new mixin
+
+        :param messages: Messages in the current conversation
+        """
+        self._messages = messages
+
+    def _build_with(self,
+                    role: Literal[Role.USER, Role.ASSISTANT],
+                    content: str = None,
+                    file: str = None) -> Conversation:
+        """
+        Build a conversation without appending the last message to the current conversation
+
+        :param role: Either temporary user or assistant role to the conversation
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: Immutable conversation
+        """
+        content = _validate_args(content, file)
+        return Conversation(self._messages + [Message(role, content)])
+
+    def build(self) -> Conversation:
+        """
+        :return: Immutable conversation
+        """
+        return Conversation(self._messages)
+
+
 class ConversationBuilder:
     """Conversation builder to ensure messages are in a valid order"""
 
@@ -57,7 +89,7 @@ class ConversationBuilder:
         """
         self._messages: List[Message] = []
 
-    def system(self, content: str = None, *, file: str = None) -> "ConversationBuilder._UserStep":
+    def system(self, content: str = None, *, file: str = None) -> "_UserStepOrBuildStep":
         """
         Add a system message
 
@@ -68,9 +100,9 @@ class ConversationBuilder:
         """
         content = _validate_args(content, file)
         self._messages.append(Message(Role.SYSTEM, content))
-        return ConversationBuilder._UserStep(self)
+        return _UserStepOrBuildStep(self._messages)
 
-    def user(self, content: str = None, *, file: str = None) -> "ConversationBuilder._AssistantOrBuildStep":
+    def user(self, content: str = None, *, file: str = None) -> "_AssistantOrBuildStep":
         """
         Add a user message
 
@@ -80,63 +112,59 @@ class ConversationBuilder:
         """
         content = _validate_args(content, file)
         self._messages.append(Message(Role.USER, content))
-        return ConversationBuilder._AssistantOrBuildStep(self)
+        return _AssistantOrBuildStep(self._messages)
 
-    def build(self) -> Conversation:
+
+class _UserStepOrBuildStep(_BuildMixIn):
+    """User turn in the conversation"""
+
+    def user(self, content: str = None, *, file: str = None) -> "_AssistantOrBuildStep":
         """
-        :return: Immutable conversation
+        Add a user message
+
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: Assistant or build step
         """
-        return Conversation(self._messages)
+        content = _validate_args(content, file)
+        self._messages.append(Message(Role.USER, content))
+        return _AssistantOrBuildStep(self._messages)
 
-    class _UserStep:
-        """User turn in the conversation"""
+    def build_with_user(self, content: str = None, *, file: str = None) -> Conversation:
+        """
+        Build with a temporary user message
 
-        def __init__(self, builder: "ConversationBuilder"):
-            """
-            Create the user turn
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: List of messages
+        """
+        return self._build_with(Role.USER, content, file)
 
-            :param builder: Conversation builder
-            """
-            self._builder = builder
 
-        def user(self, content: str = None, *, file: str = None) -> "ConversationBuilder._AssistantOrBuildStep":
-            """
-            Add a user message
+class _AssistantOrBuildStep(_BuildMixIn):
+    """Assistant or build step in the conversation"""
 
-            :param content: Content of system message (Default: None)
-            :param file: File to read content from (Default: None)
-            :return: Assistant or build step
-            """
-            content = _validate_args(content, file)
-            return self._builder.user(content)
+    def assistant(self, content: str = None, *, file: str = None) -> "_UserStepOrBuildStep":
+        """
+        Add an assistant message
 
-    class _AssistantOrBuildStep:
-        """Assistant or build step in the conversation"""
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: User step
+        """
+        content = _validate_args(content, file)
+        self._messages.append(Message(Role.ASSISTANT, content))
+        return _UserStepOrBuildStep(self._messages)
 
-        def __init__(self, builder: "ConversationBuilder"):
-            """
-            Create the assistant or build turn
-            :param builder: Conversation builder
-            """
-            self._builder = builder
+    def build_with_assistant(self, content: str = None, *, file: str = None) -> Conversation:
+        """
+        Build with a temporary assistant message
 
-        def assistant(self, content: str = None, *, file: str = None) -> "ConversationBuilder._UserStep":
-            """
-            Add an assistant message
-
-            :param content: Content of system message (Default: None)
-            :param file: File to read content from (Default: None)
-            :return: User step
-            """
-            content = _validate_args(content, file)
-            self._builder._messages.append(Message(Role.ASSISTANT, content))
-            return ConversationBuilder._UserStep(self._builder)
-
-        def build(self) -> Conversation:
-            """
-            :return: List of messages
-            """
-            return self._builder.build()
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: List of messages
+        """
+        return self._build_with(Role.USER, content, file)
 
 
 def _read_file(file: str) -> str:

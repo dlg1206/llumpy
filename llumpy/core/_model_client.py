@@ -71,7 +71,8 @@ class ModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text, retries)
+            return handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text,
+                                      retries)
         # else just prompt
         return self.extract_text(self.vendor_prompt(conversation, **prompt_kwargs))
 

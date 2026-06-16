@@ -90,6 +90,23 @@ from core import ConversationBuilder
 conversation = ConversationBuilder().user(file="prompts/user.prompt").build()
 ```
 
+The builder also supports ephemeral messages, allowing for a root conversation to be reused with only the final prompt
+swapped out like so:
+
+```python
+from llumpy import ConversationBuilder
+
+builder = ConversationBuilder().system("Foo")
+for tail in ['bar', 'baz']:
+    print(builder.build_with_user(tail))
+
+print(builder.build())
+```
+
+<img src="assets/build_with_usage.png" alt="terminal output build with">
+
+`build_with_user()` and `build_with_assistant()` also support the `file` arg as well.
+
 #### Streaming Response
 
 > Stream token responses from LLM instead of waiting for complete response
