@@ -82,13 +82,12 @@ print(textwrap.fill(response, width=100))
 <img src="assets/prompt_many.png" alt="terminal output many prompt">
 
 The `ConversationBuilder` is the main builder for LLM conversations. It ensures the resulting conversions is in a valid
-order to send to the LLM. `*_from_file()` methods are also available for `system`, `user`, and `assistant` to read
-prompts directly from files like so:
+order to send to the LLM. Using the `file` param allows to read prompts directly from files like so:
 
 ```python
 from core import ConversationBuilder
 
-conversation = ConversationBuilder().user_from_file("prompts/user.prompt").build()
+conversation = ConversationBuilder().user(file="prompts/user.prompt").build()
 ```
 
 #### Streaming Response

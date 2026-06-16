@@ -57,43 +57,30 @@ class ConversationBuilder:
         """
         self._messages: List[Message] = []
 
-    def system(self, content: str) -> "ConversationBuilder._UserStep":
+    def system(self, content: str = None, *, file: str = None) -> "ConversationBuilder._UserStep":
         """
         Add a system message
 
-        :param content: Content of system message
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :raises ValueError: If nether or both content or file provided
         :return: User step
         """
+        content = _validate_args(content, file)
         self._messages.append(Message(Role.SYSTEM, content))
         return ConversationBuilder._UserStep(self)
 
-    def system_from_file(self, file: str) -> "ConversationBuilder._UserStep":
-        """
-        Add a system message from file
-
-        :param file: File to read content from
-        :return: User step
-        """
-        return self.system(_read_file(file))
-
-    def user(self, content: str) -> "ConversationBuilder._AssistantOrBuildStep":
+    def user(self, content: str = None, *, file: str = None) -> "ConversationBuilder._AssistantOrBuildStep":
         """
         Add a user message
 
-        :param content: Content of user message
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
         :return: Assistant or build step
         """
+        content = _validate_args(content, file)
         self._messages.append(Message(Role.USER, content))
         return ConversationBuilder._AssistantOrBuildStep(self)
-
-    def user_from_file(self, file: str) -> "ConversationBuilder._AssistantOrBuildStep":
-        """
-        Add a user message from file
-
-        :param file: File to read content from
-        :return: Assistant or build step
-        """
-        return self.user(_read_file(file))
 
     def build(self) -> Conversation:
         """
@@ -112,23 +99,16 @@ class ConversationBuilder:
             """
             self._builder = builder
 
-        def user(self, content: str) -> "ConversationBuilder._AssistantOrBuildStep":
+        def user(self, content: str = None, *, file: str = None) -> "ConversationBuilder._AssistantOrBuildStep":
             """
             Add a user message
 
-            :param content: Content of user message
+            :param content: Content of system message (Default: None)
+            :param file: File to read content from (Default: None)
             :return: Assistant or build step
             """
+            content = _validate_args(content, file)
             return self._builder.user(content)
-
-        def user_from_file(self, file: str) -> "ConversationBuilder._AssistantOrBuildStep":
-            """
-            Add a user message from file
-
-            :param file: File to read content from
-            :return: Assistant or build step
-            """
-            return self.user(_read_file(file))
 
     class _AssistantOrBuildStep:
         """Assistant or build step in the conversation"""
@@ -140,24 +120,17 @@ class ConversationBuilder:
             """
             self._builder = builder
 
-        def assistant(self, content: str) -> "ConversationBuilder._UserStep":
+        def assistant(self, content: str = None, *, file: str = None) -> "ConversationBuilder._UserStep":
             """
             Add an assistant message
 
-            :param content: Content of assistant message
+            :param content: Content of system message (Default: None)
+            :param file: File to read content from (Default: None)
             :return: User step
             """
+            content = _validate_args(content, file)
             self._builder._messages.append(Message(Role.ASSISTANT, content))
             return ConversationBuilder._UserStep(self._builder)
-
-        def assistant_from_file(self, file: str) -> "ConversationBuilder._UserStep":
-            """
-            Add an assistant message from file
-
-            :param file: File to read content from
-            :return: User step
-            """
-            return self.assistant(_read_file(file))
 
         def build(self) -> Conversation:
             """
@@ -175,3 +148,22 @@ def _read_file(file: str) -> str:
     """
     with open(file, 'r', encoding='utf-8') as f:
         return f.read()
+
+
+def _validate_args(content: str | None, file: str | None) -> str:
+    """
+    Validate LLM prompt args
+
+    :param content: LLM content arg
+    :param file: File path to LLM content
+    :raises ValueError: If nether or both content or file provided
+    :return
+    """
+    # neither provided
+    if not (content or file):
+        raise ValueError("Either content or file must be provided")
+    # both provided
+    if content and file:
+        raise ValueError("Only one of content or file may be provided")
+    # return content of prompt
+    return _read_file(file) if file else content
