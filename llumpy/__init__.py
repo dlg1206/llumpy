@@ -10,29 +10,33 @@ from .client import (AnthropicClient as AnthropicClient,
                      OllamaClient as OllamaClient,
                      AsyncOllamaClient as AsyncOllamaClient,
                      OpenAIClient as OpenAIClient,
-                     AsyncOpenAIClient as AsyncOpenAIClient)
+                     AsyncOpenAIClient as AsyncOpenAIClient,
+                     InvalidAPIKeyError as InvalidAPIKeyError,
+                     ModelNotFoundError as ModelNotFoundError, )
+
 from .core import (Conversation as Conversation,
                    Message as Message,
                    ConversationBuilder as ConversationBuilder,
                    ModelClient as ModelClient,
                    AsyncModelClient as AsyncModelClient)
 
-from .utils import (InvalidAPIKeyError as InvalidAPIKeyError,
-                    ModelNotFoundError as ModelNotFoundError,
-                    ExceededRetriesError as ExceededRetriesError,
+from .retry import (ExceededRetriesError as ExceededRetriesError,
                     RetryHandler as RetryHandler,
                     AsyncRetryHandler as AsyncRetryHandler,
-                    JSONRetryHandler as JSONRetryHandler)
+                    JSONRetryHandler as JSONRetryHandler,
+                    AsyncJSONRetryHandler as AsyncJSONRetryHandler)
 
 __all__ = [
     # clients
     "OpenAIClient", "AsyncOpenAIClient",
     "AnthropicClient", "AsyncAnthropicClient",
     "OllamaClient", "AsyncOllamaClient",
+    "InvalidAPIKeyError", "ModelNotFoundError",
     # core
-    "ModelClient", "AsyncModelClient",
     "Conversation", "Message", "ConversationBuilder",
-    # utils
-    "InvalidAPIKeyError", "ModelNotFoundError", "ExceededRetriesError",
-    "RetryHandler", "AsyncRetryHandler", "JSONRetryHandler"
+    "ModelClient", "AsyncModelClient",
+    # retry
+    "ExceededRetriesError",
+    "RetryHandler", "AsyncRetryHandler",
+    "JSONRetryHandler", "AsyncJSONRetryHandler"
 ]

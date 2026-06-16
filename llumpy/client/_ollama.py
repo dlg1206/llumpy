@@ -9,8 +9,8 @@ import os
 
 import httpx
 
+from ._exception import ModelNotFoundError
 from ._openai import OpenAIClient, AsyncOpenAIClient
-from ..utils import ModelNotFoundError
 
 # ollama details
 DEFAULT_OLLAMA_HOST = "localhost"

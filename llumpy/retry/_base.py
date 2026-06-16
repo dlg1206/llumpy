@@ -1,19 +1,14 @@
 """
-File: _retry_handler.py
+File: _base.py
 
 Description: Retry handler for formating prompts
 
 @author Derek Garcia
 """
-import json
-import re
 from abc import ABC, abstractmethod
-from json import JSONDecodeError
-from typing import Any, Dict, Tuple, Type, Callable, Awaitable
+from typing import Any, Tuple, Type, Callable, Awaitable
 
-from ._exception import ExceededRetriesError
-
-JSON_RE = re.compile(r'{[\w\W]*}')
+from ._exceptions import ExceededRetriesError
 
 DEFAULT_MAX_RETRIES = 5
 
@@ -93,29 +88,3 @@ class AsyncRetryHandler(_FormatMixIn, ABC):
                 last_exc = e
         # failed to prompt
         raise ExceededRetriesError(retries) from last_exc
-
-
-class JSONRetryHandler(RetryHandler, AsyncRetryHandler):
-    """Handler for parsing JSON from LLM responses"""
-
-    @property
-    def _retry_on(self) -> Tuple[Type[Exception], ...]:
-        """
-        Retry on JSON decode
-
-        :return JSON decode errors
-        """
-        return (JSONDecodeError,)
-
-    def _format(self, response: str) -> Dict[str, Any]:
-        """
-        Validate the response contains a valid JSON object
-
-        :param response: Response text to validate contains JSON
-        :raises JSONDecodeError: If failed to parse JSON from text
-        :return: JSON object
-        """
-        match = JSON_RE.search(response.strip())
-        if not match:
-            raise JSONDecodeError("Text contains no JSON", response, 0)
-        return json.loads(match.group())

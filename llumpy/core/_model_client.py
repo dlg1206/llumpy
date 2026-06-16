@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ._message import ConversationBuilder, Conversation
-from ..utils import RetryHandler, AsyncRetryHandler, DEFAULT_MAX_RETRIES
+from ..retry import DEFAULT_MAX_RETRIES, RetryHandler, AsyncRetryHandler
 
 
 class ModelClient(ABC):

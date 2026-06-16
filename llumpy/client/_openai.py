@@ -10,8 +10,8 @@ from typing import List, Any, cast
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
+from ._exception import InvalidAPIKeyError, ModelNotFoundError
 from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key
-from ..utils import InvalidAPIKeyError, ModelNotFoundError
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 OPENAI_BASE_URL = "https://api.openai.com/v1"

@@ -21,7 +21,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["llumpy", "llumpy.client", "llumpy.core", "llumpy.utils"]
+packages = ["llumpy", "llumpy.client", "llumpy.core", "llumpy.retry", "llumpy.retry.handlers"]
 [tool.setuptools.package-data]
 llumpy = ["py.typed"]
 
