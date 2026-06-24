@@ -27,7 +27,7 @@ class OpenAIClient(ModelClient):
         :param model: LLM to use
         :param api_key: API key to use (Default: OPENAI_API_KEY_ENV)
         :param base_url: URL of api server (Default: OpenAI)
-        :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
+        :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY_ENV' env var is not defined
         """
         super().__init__(model)
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
