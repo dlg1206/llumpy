@@ -13,18 +13,15 @@ from ._exception import ModelNotFoundError
 from ._openai import OpenAIClient, AsyncOpenAIClient
 
 # ollama details
-DEFAULT_OLLAMA_HOST = "localhost"
-DEFAULT_OLLAMA_PORT = "11434"
+DEFAULT_SERVER_URL = "http://localhost:11434"
+DEFAULT_MODEL_TAG = "lastest"
+
+OLLAMA_SERVER_URL_ENV = "OLLAMA_SERVER_URL"
 
 # endpoints
 MODEL_LIBRARY = "https://ollama.com/library"
 MODEL_DOWNLOAD_ENDPOINT = "api/pull"
 MODEL_VIEW_ENDPOINT = "api/show"
-
-OLLAMA_HOST_ENV = "OLLAMA_HOST"
-OLLAMA_PORT_ENV = "OLLAMA_PORT"
-
-DEFAULT_TAG = "lastest"
 
 
 class InvalidOllamaServerError(ConnectionError):
@@ -45,22 +42,19 @@ class InvalidOllamaServerError(ConnectionError):
 class _OllamaClientMixin:
     """Mixin for ollama server and model details"""
 
-    def _init_ollama(self, model_name: str, model_tag: str, ollama_host: str = None, ollama_port: int = None) -> str:
+    def _init_ollama(self, model_name: str, model_tag: str, server_url: str | None = None) -> str:
         """
         Create new Ollama Client
         Server will check param, env, then env before defaults
 
         :param model_name: Name of model to use
-        :param model_tag: Optional model tag (Default: latest)
-        :param ollama_host: Host of ollama server (Default: localhost)
-        :param ollama_port: Host of ollama port (Default: 11434)
-        :returns: Base url to use fo OpenAI API
+        :param model_tag: Model tag to use
+        :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
+        :returns: Base url to use for OpenAI API
         """
-        ollama_host = ollama_host or os.getenv(OLLAMA_HOST_ENV, DEFAULT_OLLAMA_HOST)
-        ollama_port = ollama_port or int(os.getenv(OLLAMA_PORT_ENV, DEFAULT_OLLAMA_PORT))
         self._model_name = model_name
         self._model_tag = model_tag
-        self._ollama_server = f"http://{ollama_host}:{ollama_port}"
+        self._ollama_server = server_url or os.getenv(OLLAMA_SERVER_URL_ENV, DEFAULT_SERVER_URL)
         return f"{self._ollama_server}/v1"  # base_url for OpenAI client
 
     @property
@@ -83,17 +77,16 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
     Interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_TAG, ollama_host: str = None, ollama_port: int = None):
+    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
         """
         Create new Ollama Client
         Server will check param, env, then env before defaults
 
         :param model_name: Name of model to use
         :param model_tag: Optional model tag (Default: latest)
-        :param ollama_host: Host of ollama server (Default: localhost)
-        :param ollama_port: Host of ollama port (Default: 11434)
+        :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
-        base_url = self._init_ollama(model_name, model_tag, ollama_host, ollama_port)
+        base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
     def _is_model_downloaded(self) -> bool:
@@ -155,17 +148,16 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
     Async interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_TAG, ollama_host: str = None, ollama_port: int = None):
+    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
         """
         Create new Ollama Client
         Server will check param, env, then env before defaults
 
         :param model_name: Name of model to use
         :param model_tag: Optional model tag (Default: latest)
-        :param ollama_host: Host of ollama server (Default: localhost)
-        :param ollama_port: Host of ollama port (Default: 11434)
+        :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
-        base_url = self._init_ollama(model_name, model_tag, ollama_host, ollama_port)
+        base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
     async def _is_model_downloaded(self) -> bool:

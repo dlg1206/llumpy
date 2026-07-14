@@ -30,9 +30,9 @@ gpt = OpenAIClient('gpt-5.4')
 # API key env var: ANTHROPIC_API_KEY
 claude = AnthropicClient('claude-sonnet-4-6')
 
-# Ollama Host env var: OLLAMA_HOST (Default: localhost)
-# Ollama Port env var: OLLAMA_PORT (Default: 11434)
-ollama = OllamaClient('llama3', '8b')
+# Ollama server url env var: OLLAMA_SERVER_URL (Default: http://localhost:11434)
+llama3_latest = OllamaClient('llama3')  # default ':latest'
+llama3_8b = OllamaClient('llama3', '8b')
 ```
 
 > [!WARNING]  
@@ -48,8 +48,8 @@ ollama = OllamaClient('llama3', '8b')
 ```python
 from llumpy import OllamaClient
 
-ollama = OllamaClient('llama3', '8b')
-response = ollama.prompt_one("Hello!")
+llama3_8b = OllamaClient('llama3', '8b')
+response = llama3_8b.prompt_one("Hello!")
 print(response)
 ```
 
@@ -64,7 +64,7 @@ import textwrap
 
 from llumpy import OllamaClient, Conversation, ConversationBuilder
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 conversation = (
     ConversationBuilder()
     .system(
@@ -75,7 +75,7 @@ conversation = (
     .user("What should I wear?")
     .build()
 )
-response = ollama.prompt_many(conversation)
+response = llama3_8b.prompt_many(conversation)
 print(textwrap.fill(response, width=100))
 ```
 
@@ -114,11 +114,11 @@ print(builder.build())
 ```python
 from llumpy import OllamaClient, ConversationBuilder
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 conversation = ConversationBuilder().user("Hello!").build()
 
-for chunk in ollama.prompt_stream(conversation):
-    print(ollama.extract_text(chunk), end="_", flush=True)
+for chunk in llama3_8b.prompt_stream(conversation):
+    print(llama3_8b.extract_text(chunk), end="_", flush=True)
 ```
 
 <img src="assets/prompt_stream.png" alt="terminal output for streamed response">
@@ -130,14 +130,14 @@ for chunk in ollama.prompt_stream(conversation):
 ```python
 from llumpy import OllamaClient, ConversationBuilder
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 conversation = (ConversationBuilder()
                 .system("You are an color expert. Return a single line of text without extra explanation")
                 .user("Create a name for a shade of red")
                 .build())
-print(ollama.prompt_many(conversation, temperature=0.0))
+print(llama3_8b.prompt_many(conversation, temperature=0.0))
 print("---")
-print(ollama.prompt_many(conversation, temperature=1.0))
+print(llama3_8b.prompt_many(conversation, temperature=1.0))
 ```
 
 <img src="assets/prompt_kwargs.png" alt="terminal output for additional params">
@@ -155,8 +155,8 @@ from llumpy import AsyncOllamaClient
 
 
 async def main():
-    ollama = AsyncOllamaClient('llama3', '8b')
-    response = await ollama.prompt_one("Hello!")
+    llama3_8b = AsyncOllamaClient('llama3', '8b')
+    response = await llama3_8b.prompt_one("Hello!")
     print(response)
 
 
@@ -173,9 +173,9 @@ if __name__ == '__main__':
 ```python
 from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 
-print(ollama.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
+print(llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
 ```
 
 <img src="assets/retry_handler_fail.png" alt="terminal failure when exceed retries">
@@ -183,10 +183,10 @@ print(ollama.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
 ```python
 from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 
 conversation = ConversationBuilder().system("Only reply in JSON").user("Hello!").build()
-print(ollama.prompt_many(conversation, handler=JSONRetryHandler()))
+print(llama3_8b.prompt_many(conversation, handler=JSONRetryHandler()))
 ```
 
 <img src="assets/retry_handler_pass.png" alt="terminal success with handler">
@@ -201,10 +201,10 @@ See [Custom Handlers](#custom-handlers) for custom handlers.
 ```python
 from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
 
-ollama = OllamaClient('llama3', '8b')
+llama3_8b = OllamaClient('llama3', '8b')
 
 conversation = ConversationBuilder().user("Hello!").build()
-response = ollama.vendor_prompt(conversation)
+response = llama3_8b.vendor_prompt(conversation)
 
 # ollama uses OpenAI APIs
 print(type(response))
