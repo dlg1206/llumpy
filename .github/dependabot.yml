@@ -8,10 +8,8 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
-    commit-message:
-      prefix: "chore(deps)"
     groups:
-      ai-clients:
+      ai:
         # openai + anthropic tend to release together — review as a unit
         patterns:
           - "openai"
@@ -19,22 +17,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
-      http:
+      all:
         patterns:
-          - "httpx"
+          - "*"
         update-types:
           - "minor"
           - "patch"
-      dev:
-        dependency-type: "development"
-        update-types:
-          - "minor"
-          - "patch"
+    # Ignore major changes
     ignore:
-      # Pin major versions — openai and anthropic have breaking changes between majors
-      - dependency-name: "openai"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "anthropic"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "httpx"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
