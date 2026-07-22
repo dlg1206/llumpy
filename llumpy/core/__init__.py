@@ -1,10 +1,5 @@
-"""
-File: __init__.py
+# pylint: disable=useless-import-alias, missing-module-docstring
 
-Description:
-
-@author Derek Garcia
-"""
 from ._args import load_api_key as load_api_key
 from ._async_model_client import AsyncModelClient as AsyncModelClient
 from ._conversation_builder import ConversationBuilder as ConversationBuilder

@@ -73,7 +73,6 @@ class _UserStep(_MessagesHolder):
 
 class _UserOrBuildStep(_UserStep, _BuildMixIn):
     """User turn in the conversation - allow build"""
-    pass
 
 
 class _AssistantOrBuildStep(_MessagesHolder, _BuildMixIn):

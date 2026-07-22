@@ -61,7 +61,6 @@ class _UserStep(_MessagesHolder):
 
 class _UserOrPromptStep(_UserStep, _PromptMixIn):
     """User turn in the conversation - allow prompting"""
-    pass
 
 
 class _AssistantOrPromptStep(_MessagesHolder, _PromptMixIn):
