@@ -235,7 +235,7 @@ from llumpy.retry import JSONRetryHandler
 
 llama3_8b = OllamaClient('llama3', '8b')
 
-print(llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
+print(llama3_8b.system("Only reply in JSON").user("Hello!").prompt(handler=JSONRetryHandler()))
 ```
 
 <img src="assets/retry_handler_pass.png" alt="terminal success with handler">
