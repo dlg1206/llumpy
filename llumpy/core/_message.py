@@ -80,14 +80,33 @@ class _BuildMixIn(ABC):
         return Conversation(self._messages)
 
 
-class ConversationBuilder:
-    """Conversation builder to ensure messages are in a valid order"""
+class _MessagesHolder:
+    """Holds the message list and shares the validate and append logic"""
 
-    def __init__(self):
+    def __init__(self, messages: List[Message] | None = None):
         """
-        Create new builder
+        Create a new container for messages
+
+        :param messages: List of messages to append to (Default: None)
         """
-        self._messages: List[Message] = []
+        self._messages: List[Message] = messages if messages is not None else []
+
+    def _add(self, role: Role, content: str | None, file: str | None) -> List[Message]:
+        """
+        Validate args, append the message, and return the message list
+
+        :param role: Role of the message
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: List with updated method
+        """
+        validated = _validate_args(content, file)
+        self._messages.append(Message(role, validated))
+        return self._messages
+
+
+class ConversationBuilder(_MessagesHolder):
+    """Conversation builder to ensure messages are in a valid order"""
 
     def system(self, content: str | None = None, *, file: str | None = None) -> "_UserStepOrBuildStep":
         """
@@ -98,9 +117,7 @@ class ConversationBuilder:
         :raises ValueError: If nether or both content or file provided
         :return: User step
         """
-        content = _validate_args(content, file)
-        self._messages.append(Message(Role.SYSTEM, content))
-        return _UserStepOrBuildStep(self._messages)
+        return _UserStepOrBuildStep(self._add(Role.SYSTEM, content, file))
 
     def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrBuildStep":
         """
@@ -110,12 +127,10 @@ class ConversationBuilder:
         :param file: File to read content from (Default: None)
         :return: Assistant or build step
         """
-        content = _validate_args(content, file)
-        self._messages.append(Message(Role.USER, content))
-        return _AssistantOrBuildStep(self._messages)
+        return _AssistantOrBuildStep(self._add(Role.USER, content, file))
 
 
-class _UserStepOrBuildStep(_BuildMixIn):
+class _UserStepOrBuildStep(_MessagesHolder, _BuildMixIn):
     """User turn in the conversation"""
 
     def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrBuildStep":
@@ -126,9 +141,7 @@ class _UserStepOrBuildStep(_BuildMixIn):
         :param file: File to read content from (Default: None)
         :return: Assistant or build step
         """
-        content = _validate_args(content, file)
-        self._messages.append(Message(Role.USER, content))
-        return _AssistantOrBuildStep(self._messages)
+        return _AssistantOrBuildStep(self._add(Role.USER, content, file))
 
     def build_with_user(self, content: str | None = None, *, file: str | None = None) -> Conversation:
         """
@@ -141,7 +154,7 @@ class _UserStepOrBuildStep(_BuildMixIn):
         return self._build_with(Role.USER, content, file)
 
 
-class _AssistantOrBuildStep(_BuildMixIn):
+class _AssistantOrBuildStep(_MessagesHolder, _BuildMixIn):
     """Assistant or build step in the conversation"""
 
     def assistant(self, content: str | None = None, *, file: str | None = None) -> "_UserStepOrBuildStep":
@@ -152,9 +165,7 @@ class _AssistantOrBuildStep(_BuildMixIn):
         :param file: File to read content from (Default: None)
         :return: User step
         """
-        content = _validate_args(content, file)
-        self._messages.append(Message(Role.ASSISTANT, content))
-        return _UserStepOrBuildStep(self._messages)
+        return _UserStepOrBuildStep(self._add(Role.ASSISTANT, content, file))
 
     def build_with_assistant(self, content: str | None = None, *, file: str | None = None) -> Conversation:
         """
