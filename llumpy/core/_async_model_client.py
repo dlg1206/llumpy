@@ -6,14 +6,117 @@ Description: Generic models for asynchronous clients
 @author Derek Garcia
 """
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, List
 
-from ._conversation_builder import ConversationBuilder
-from ._models import Conversation
+from ._args import _validate_args
+from ._conversation_builder import ConversationBuilder, _MessagesHolder
+from ._models import Conversation, Message, Role
 from ..retry import DEFAULT_MAX_RETRIES, AsyncRetryHandler
 
 
-class AsyncModelClient(ABC):
+class _AsyncPromptMixIn:
+    """Mixin that allows a step to prompt the model that started this chain"""
+    _messages: List[Message]
+    _client: "AsyncModelClient"
+
+    async def prompt(self,
+                     *,
+                     handler: AsyncRetryHandler | None = None,
+                     retries: int = DEFAULT_MAX_RETRIES,
+                     **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model for simple text return
+
+        :param handler: Optional handler to ensure the response is valid (Default: None)
+        :param retries: Number of retries allowed (Default: 5)
+        :param prompt_kwargs: kwargs for chat
+        :return: Completed chat response text or parsed object from retry handler
+        """
+        return await self._client.prompt_many(Conversation(self._messages), handler=handler, retries=retries,
+                                              **prompt_kwargs)
+
+
+class _UserStep(_MessagesHolder):
+    """First user turn - prevent prompting with just a system prompt"""
+
+    def __init__(self, messages: List[Message], client: "AsyncModelClient"):
+        """
+        Create a new User step
+
+        :param messages: List of messages of the current conversation
+        :param client: Client to eventually prompt
+        """
+        super().__init__(messages)
+        self._client = client
+
+    def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrAsyncPromptStep":
+        """
+        Add a user message
+
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: Assistant or build step
+        """
+        return _AssistantOrAsyncPromptStep(self._add(Role.USER, content, file), self._client)
+
+
+class _UserOrAsyncPromptStep(_UserStep, _AsyncPromptMixIn):
+    """User turn in the conversation - allow prompting"""
+    pass
+
+
+class _AssistantOrAsyncPromptStep(_MessagesHolder, _AsyncPromptMixIn):
+    """Assistant or build step in the conversation"""
+
+    def __init__(self, messages: List[Message], client: "AsyncModelClient"):
+        """
+        Create a new Assistant step
+
+        :param messages: List of messages of the current conversation
+        :param client: Client to eventually prompt
+        """
+        super().__init__(messages)
+        self._client = client
+
+    def assistant(self, content: str | None = None, *, file: str | None = None) -> _UserOrAsyncPromptStep:
+        """
+        Add an assistant message
+
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: User step or prompt step
+        """
+        return _UserOrAsyncPromptStep(self._add(Role.ASSISTANT, content, file), self._client)
+
+
+class _SingleUseConversationMixIn:
+    """MixIn to prompt client with a single use conversations"""
+
+    def system(self, content: str | None = None, *, file: str | None = None) -> _UserStep:
+        """
+        Init conversation with a system message
+
+        :param content: Content of system message (Default: None)
+        :param file: File to read content from (Default: None)
+        :raises ValueError: If nether or both content or file provided
+        :return: User step
+        """
+        validated = _validate_args(content, file)
+        return _UserStep([Message(Role.SYSTEM, validated)], self)
+
+    def user(self, content: str | None = None, *, file: str | None = None) -> _AssistantOrAsyncPromptStep:
+        """
+        Init conversation with a user message
+
+        :param content: Content of user message (Default: None)
+        :param file: File to read content from (Default: None)
+        :return: Assistant or build step
+        """
+        validated = _validate_args(content, file)
+        return _AssistantOrAsyncPromptStep([Message(Role.USER, validated)], self)
+
+
+class AsyncModelClient(_SingleUseConversationMixIn, ABC):
     """Placeholder class for asynchronous clients"""
 
     def __init__(self, model: str):
