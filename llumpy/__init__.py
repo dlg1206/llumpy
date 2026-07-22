@@ -10,16 +10,16 @@ from .client import (AnthropicClient as AnthropicClient,
                      OllamaClient as OllamaClient,
                      AsyncOllamaClient as AsyncOllamaClient,
                      OpenAIClient as OpenAIClient,
-                     AsyncOpenAIClient as AsyncOpenAIClient,
-                     InvalidAPIKeyError as InvalidAPIKeyError,
-                     ModelNotFoundError as ModelNotFoundError, )
+                     AsyncOpenAIClient as AsyncOpenAIClient)
 
 from .core import (Role as Role,
                    Message as Message,
                    Conversation as Conversation,
                    ConversationBuilder as ConversationBuilder,
                    ModelClient as ModelClient,
-                   AsyncModelClient as AsyncModelClient)
+                   AsyncModelClient as AsyncModelClient,
+                   InvalidAPIKeyError as InvalidAPIKeyError,
+                   ModelNotFoundError as ModelNotFoundError)
 
 from .retry import (ExceededRetriesError as ExceededRetriesError,
                     RetryHandler as RetryHandler,
@@ -32,10 +32,10 @@ __all__ = [
     "OpenAIClient", "AsyncOpenAIClient",
     "AnthropicClient", "AsyncAnthropicClient",
     "OllamaClient", "AsyncOllamaClient",
-    "InvalidAPIKeyError", "ModelNotFoundError",
     # core
     "ConversationBuilder", "Role", "Message", "Conversation",
     "ModelClient", "AsyncModelClient",
+    "InvalidAPIKeyError", "ModelNotFoundError",
     # retry
     "ExceededRetriesError",
     "RetryHandler", "AsyncRetryHandler",
