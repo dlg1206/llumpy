@@ -180,6 +180,17 @@ class AsyncModelClient(_SingleUseConversationMixIn, ABC):
         # else just prompt
         return self.extract_text(await self.vendor_prompt(conversation, **prompt_kwargs))
 
+    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model and stream the response
+
+        :param conversation: Messages to send to LLM
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat stream
+        """
+        # wrapper for vendor prompt
+        return await self.vendor_prompt_stream(conversation, **prompt_kwargs)
+
     @abstractmethod
     async def validate(self) -> None:
         """Validate the client is ready to use"""

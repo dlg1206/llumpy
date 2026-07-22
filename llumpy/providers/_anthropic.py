@@ -8,7 +8,7 @@ Description: Client for interacting with Anthropic models
 from typing import List, Any, cast
 
 from anthropic import AuthenticationError, NotFoundError, PermissionDeniedError, Anthropic, Stream, AsyncAnthropic, \
-    AsyncStream
+    AsyncStream, MessageStreamEvent
 from anthropic.types import Message, TextBlock, RawMessageStreamEvent, RawContentBlockDeltaEvent, TextDelta
 
 from ..core import ModelClient, AsyncModelClient, Conversation, load_api_key, InvalidAPIKeyError, ModelNotFoundError
@@ -42,7 +42,7 @@ class AnthropicClient(ModelClient):
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
-
+        prompt_kwargs.pop("stream", None)  # guard against true stream
         return cast(Message, self._model_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
@@ -63,7 +63,7 @@ class AnthropicClient(ModelClient):
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
-
+        prompt_kwargs.pop("stream", None)  # guard against false stream
         return cast(Stream[RawMessageStreamEvent],
                     self._model_client.messages.create(
                         model=self._model,
@@ -132,7 +132,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
-
+        prompt_kwargs.pop("stream", None)  # guard against true stream
         return await self._model_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
@@ -155,26 +155,30 @@ class AsyncAnthropicClient(AsyncModelClient):
         messages: List[Any] = conversation.to_dicts()
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
+        prompt_kwargs.pop("stream", None)  # guard against false stream
+        return await self._model_client.messages.create(
+            model=self._model,
+            max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
+            messages=non_system,
+            stream=True,
+            **({"system": system} if system else {}),
+            **prompt_kwargs
+        )
 
-        return cast(AsyncStream[RawMessageStreamEvent],
-                    self._model_client.messages.create(
-                        model=self._model,
-                        max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
-                        messages=non_system,
-                        stream=True,
-                        **({"system": system} if system else {}),
-                        **prompt_kwargs
-                    ))
-
-    def extract_text(self, response: Message) -> str | None:
+    def extract_text(self, response: Message | MessageStreamEvent) -> str | None:
         """
         Extract LLM response text from Anthropic object
 
         :param response: Anthropic chat response
         :return: Text message if present, else None
         """
-        text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
-        return text_block.text if text_block else None
+        if isinstance(response, Message):
+            text_block = next((block for block in response.content if isinstance(block, TextBlock)), None)
+            return text_block.text if text_block else None
+
+        if response.type == "content_block_delta" and response.delta.type == "text_delta":
+            return response.delta.text
+        return None
 
     async def validate(self) -> None:
         """
