@@ -1,7 +1,7 @@
 """
-File: _model_client.py
+File: _async_model_client.py
 
-Description: Generic models for synchronous clients
+Description: Generic models for asynchronous clients
 
 @author Derek Garcia
 """
@@ -10,20 +10,20 @@ from typing import Any, List
 
 from ._args import _validate_args
 from ._conversation_builder import ConversationBuilder, _MessagesHolder
-from ._models import Conversation, Role, Message
-from ..retry import DEFAULT_MAX_RETRIES, RetryHandler
+from ._models import Conversation, Message, Role
+from ..retry import DEFAULT_MAX_RETRIES, AsyncRetryHandler
 
 
-class _PromptMixIn:
+class _AsyncPromptMixIn:
     """Mixin that allows a step to prompt the model that started this chain"""
     _messages: List[Message]
-    _client: "ModelClient"
+    _client: "AsyncModelClient"
 
-    def prompt(self,
-               *,
-               handler: RetryHandler | None = None,
-               retries: int = DEFAULT_MAX_RETRIES,
-               **prompt_kwargs: Any) -> Any:
+    async def prompt(self,
+                     *,
+                     handler: AsyncRetryHandler | None = None,
+                     retries: int = DEFAULT_MAX_RETRIES,
+                     **prompt_kwargs: Any) -> Any:
         """
         Prompt a model for simple text return
 
@@ -32,13 +32,14 @@ class _PromptMixIn:
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text or parsed object from retry handler
         """
-        return self._client.prompt_many(Conversation(self._messages), handler=handler, retries=retries, **prompt_kwargs)
+        return await self._client.prompt_many(Conversation(self._messages), handler=handler, retries=retries,
+                                              **prompt_kwargs)
 
 
 class _UserStep(_MessagesHolder):
     """First user turn - prevent prompting with just a system prompt"""
 
-    def __init__(self, messages: List[Message], client: "ModelClient"):
+    def __init__(self, messages: List[Message], client: "AsyncModelClient"):
         """
         Create a new User step
 
@@ -48,7 +49,7 @@ class _UserStep(_MessagesHolder):
         super().__init__(messages)
         self._client = client
 
-    def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrPromptStep":
+    def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrAsyncPromptStep":
         """
         Add a user message
 
@@ -56,17 +57,17 @@ class _UserStep(_MessagesHolder):
         :param file: File to read content from (Default: None)
         :return: Assistant or build step
         """
-        return _AssistantOrPromptStep(self._add(Role.USER, content, file), self._client)
+        return _AssistantOrAsyncPromptStep(self._add(Role.USER, content, file), self._client)
 
 
-class _UserOrPromptStep(_UserStep, _PromptMixIn):
+class _UserOrAsyncPromptStep(_UserStep, _AsyncPromptMixIn):
     """User turn in the conversation - allow prompting"""
 
 
-class _AssistantOrPromptStep(_MessagesHolder, _PromptMixIn):
+class _AssistantOrAsyncPromptStep(_MessagesHolder, _AsyncPromptMixIn):
     """Assistant or build step in the conversation"""
 
-    def __init__(self, messages: List[Message], client: "ModelClient"):
+    def __init__(self, messages: List[Message], client: "AsyncModelClient"):
         """
         Create a new Assistant step
 
@@ -76,7 +77,7 @@ class _AssistantOrPromptStep(_MessagesHolder, _PromptMixIn):
         super().__init__(messages)
         self._client = client
 
-    def assistant(self, content: str | None = None, *, file: str | None = None) -> _UserOrPromptStep:
+    def assistant(self, content: str | None = None, *, file: str | None = None) -> _UserOrAsyncPromptStep:
         """
         Add an assistant message
 
@@ -84,7 +85,7 @@ class _AssistantOrPromptStep(_MessagesHolder, _PromptMixIn):
         :param file: File to read content from (Default: None)
         :return: User step or prompt step
         """
-        return _UserOrPromptStep(self._add(Role.ASSISTANT, content, file), self._client)
+        return _UserOrAsyncPromptStep(self._add(Role.ASSISTANT, content, file), self._client)
 
 
 class _SingleUseConversationMixIn:
@@ -102,7 +103,7 @@ class _SingleUseConversationMixIn:
         validated = _validate_args(content, file)
         return _UserStep([Message(Role.SYSTEM, validated)], self)
 
-    def user(self, content: str | None = None, *, file: str | None = None) -> _AssistantOrPromptStep:
+    def user(self, content: str | None = None, *, file: str | None = None) -> _AssistantOrAsyncPromptStep:
         """
         Init conversation with a user message
 
@@ -111,38 +112,38 @@ class _SingleUseConversationMixIn:
         :return: Assistant or build step
         """
         validated = _validate_args(content, file)
-        return _AssistantOrPromptStep([Message(Role.USER, validated)], self)
+        return _AssistantOrAsyncPromptStep([Message(Role.USER, validated)], self)
 
 
-class ModelClient(_SingleUseConversationMixIn, ABC):
-    """Placeholder class for synchronous clients"""
+class AsyncModelClient(_SingleUseConversationMixIn, ABC):
+    """Placeholder class for asynchronous clients"""
 
     def __init__(self, model: str):
         """
         Create new client
 
-        :param model: Model to use
+        :param model: Name of model to use
         """
         self._model = model
 
     @abstractmethod
-    def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
 
     @abstractmethod
-    def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response stream object"""
 
     @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
 
-    def prompt_one(self,
-                   message: str,
-                   *,
-                   handler: RetryHandler | None = None,
-                   retries: int = DEFAULT_MAX_RETRIES,
-                   **prompt_kwargs: Any) -> Any:
+    async def prompt_one(self,
+                         message: str,
+                         *,
+                         handler: AsyncRetryHandler | None = None,
+                         retries: int = DEFAULT_MAX_RETRIES,
+                         **prompt_kwargs: Any) -> Any:
         """
         Prompt a model for simple text return
 
@@ -153,14 +154,14 @@ class ModelClient(_SingleUseConversationMixIn, ABC):
         :return: Completed chat response text or parsed object from retry handler
         """
         conversation = ConversationBuilder().user(message).build()
-        return self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
+        return await self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
 
-    def prompt_many(self,
-                    conversation: Conversation,
-                    *,
-                    handler: RetryHandler | None = None,
-                    retries: int = DEFAULT_MAX_RETRIES,
-                    **prompt_kwargs: Any) -> Any:
+    async def prompt_many(self,
+                          conversation: Conversation,
+                          *,
+                          handler: AsyncRetryHandler | None = None,
+                          retries: int = DEFAULT_MAX_RETRIES,
+                          **prompt_kwargs: Any) -> Any:
         """
         Prompt a model for simple text return
 
@@ -172,12 +173,13 @@ class ModelClient(_SingleUseConversationMixIn, ABC):
         """
         # wrap with handler if provided
         if handler:
-            return handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text,
-                                      retries)
+            return await handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs),
+                                            self.extract_text,
+                                            retries)
         # else just prompt
-        return self.extract_text(self.vendor_prompt(conversation, **prompt_kwargs))
+        return self.extract_text(await self.vendor_prompt(conversation, **prompt_kwargs))
 
-    def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """
         Prompt a model and stream the response
 
@@ -186,10 +188,10 @@ class ModelClient(_SingleUseConversationMixIn, ABC):
         :return: Chat stream
         """
         # wrapper for vendor prompt
-        return self.vendor_prompt_stream(conversation, **prompt_kwargs)
+        return await self.vendor_prompt_stream(conversation, **prompt_kwargs)
 
     @abstractmethod
-    def validate(self) -> None:
+    async def validate(self) -> None:
         """Validate the client is ready to use"""
 
     @property

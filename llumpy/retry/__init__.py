@@ -1,10 +1,4 @@
-"""
-File: __init__.py
-
-Description:
-
-@author Derek Garcia
-"""
+# pylint: disable=useless-import-alias, missing-module-docstring
 
 from ._base import (RetryHandler as RetryHandler,
                     AsyncRetryHandler as AsyncRetryHandler,

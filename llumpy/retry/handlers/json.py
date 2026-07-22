@@ -26,7 +26,8 @@ class _JSONRetryHandlerBase(ABC):
         """
         return (JSONDecodeError,)
 
-    def _format(self, response: str) -> Dict[str, Any]:
+    @staticmethod
+    def _format(response: str) -> Dict[str, Any]:
         """
         Validate the response contains a valid JSON object
 

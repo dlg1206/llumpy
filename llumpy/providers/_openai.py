@@ -10,8 +10,7 @@ from typing import List, Any, cast
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
-from ._exception import InvalidAPIKeyError, ModelNotFoundError
-from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key
+from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key, InvalidAPIKeyError, ModelNotFoundError
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
 OPENAI_BASE_URL = "https://api.openai.com/v1"
@@ -20,7 +19,7 @@ OPENAI_BASE_URL = "https://api.openai.com/v1"
 class OpenAIClient(ModelClient):
     """Client interface for interacting with OpenAI API"""
 
-    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
 
@@ -44,6 +43,7 @@ class OpenAIClient(ModelClient):
         :return: Chat completion or stream
         """
         messages: List[Any] = conversation.to_dicts()
+        prompt_kwargs.pop("stream", None)  # guard against true stream
         return cast(ChatCompletion, self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
@@ -60,6 +60,7 @@ class OpenAIClient(ModelClient):
         :return: Chat stream
         """
         messages: List[Any] = conversation.to_dicts()
+        prompt_kwargs.pop("stream", None)  # guard against false stream
         return cast(Stream[ChatCompletionChunk], self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
@@ -98,7 +99,7 @@ class OpenAIClient(ModelClient):
 class AsyncOpenAIClient(AsyncModelClient):
     """Async client interface for interacting with OpenAI API"""
 
-    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
 
@@ -122,6 +123,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         :return: Chat completion or stream
         """
         messages: List[Any] = conversation.to_dicts()
+        prompt_kwargs.pop("stream", None)  # guard against true stream
         return await self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
@@ -129,8 +131,9 @@ class AsyncOpenAIClient(AsyncModelClient):
             **prompt_kwargs
         )
 
-    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> AsyncStream[
-        ChatCompletionChunk]:
+    async def vendor_prompt_stream(self,
+                                   conversation: Conversation,
+                                   **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
         """
         Prompt a model for OpenAI chat completion
 
@@ -139,21 +142,26 @@ class AsyncOpenAIClient(AsyncModelClient):
         :return: Chat stream
         """
         messages: List[Any] = conversation.to_dicts()
-        return cast(AsyncStream[ChatCompletionChunk], self._model_client.chat.completions.create(
+        prompt_kwargs.pop("stream", None)  # guard against false stream
+        return await self._model_client.chat.completions.create(
             model=self._model,
             messages=messages,
             stream=True,
             **prompt_kwargs
-        ))
+        )
 
-    def extract_text(self, response: ChatCompletion) -> str | None:
+    def extract_text(self, response: ChatCompletion | ChatCompletionChunk) -> str | None:
         """
         Extract LLM response text from OpenAI object
 
         :param response: OpenAI chat response
         :return: Text message if present, else None
         """
-        return response.choices[0].message.content
+        if isinstance(response, ChatCompletion):
+            return response.choices[0].message.content
+        if not response.choices:
+            return None
+        return response.choices[0].delta.content
 
     async def validate(self) -> None:
         """
