@@ -164,7 +164,7 @@ class _AssistantOrBuildStep(_BuildMixIn):
         :param file: File to read content from (Default: None)
         :return: List of messages
         """
-        return self._build_with(Role.USER, content, file)
+        return self._build_with(Role.ASSISTANT, content, file)
 
 
 def _read_file(file: str) -> str:
