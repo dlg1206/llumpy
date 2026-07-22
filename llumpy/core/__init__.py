@@ -6,8 +6,8 @@ Description:
 @author Derek Garcia
 """
 from ._conversation_builder import ConversationBuilder as ConversationBuilder
-from ._exception import (InvalidAPIKeyError as InvalidAPIKeyError,
-                         ModelNotFoundError as ModelNotFoundError)
+from ._exceptions import (InvalidAPIKeyError as InvalidAPIKeyError,
+                          ModelNotFoundError as ModelNotFoundError)
 from ._model_client import (ModelClient as ModelClient,
                             AsyncModelClient as AsyncModelClient,
                             load_api_key as load_api_key)
