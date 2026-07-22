@@ -1,52 +1,15 @@
 """
-File: _message.py
+File: _conversation_builder.py
 
-Description: Model for messages to send to LLMs
+Description: Builder to ensure conversations to LLMs are in the correct order
 
 @author Derek Garcia
 """
 from abc import ABC
-from dataclasses import dataclass, asdict
-from enum import StrEnum
-from typing import List, Dict, Literal
+from typing import List, Literal
 
-
-class Role(StrEnum):
-    """Roles for LLM conversation"""
-    SYSTEM = 'system'
-    USER = 'user'
-    ASSISTANT = 'assistant'
-
-
-@dataclass(frozen=True)
-class Message:
-    """DTO for LLM messages"""
-    role: Role
-    content: str
-
-    def to_dict(self) -> Dict:
-        """
-        :return: DTO as dict
-        """
-        return asdict(self)
-
-
-@dataclass(frozen=True)
-class Conversation:
-    """Immutable conversation for LLM"""
-    messages: List[Message]
-
-    def to_dicts(self) -> List[Dict[str, str]]:
-        """
-        :return: Messages as dicts for API
-        """
-        return [m.to_dict() for m in self.messages]
-
-    def __iter__(self):
-        return iter(self.messages)
-
-    def __len__(self):
-        return len(self.messages)
+from ._args import _validate_args
+from ._models import Role, Message, Conversation
 
 
 class _BuildMixIn(ABC):
@@ -176,39 +139,3 @@ class _AssistantOrBuildStep(_MessagesHolder, _BuildMixIn):
         :return: List of messages
         """
         return self._build_with(Role.ASSISTANT, content, file)
-
-
-def _read_file(file: str) -> str:
-    """
-    Read content of a file
-
-    :param file: Path to file
-    :return: File content
-    """
-    with open(file, 'r', encoding='utf-8') as f:
-        return f.read()
-
-
-def _validate_args(content: str | None, file: str | None) -> str:
-    """
-    Validate LLM prompt args
-
-    :param content: LLM content arg
-    :param file: File path to LLM content
-    :raises ValueError: If nether or both content or file provided
-    :return: File content or content
-    """
-    # neither provided
-    if content is None and file is None:
-        raise ValueError("Either content or file must be provided")
-    # both provided
-    if content is not None and file is not None:
-        raise ValueError("Only one of content or file may be provided")
-    # return content if set
-    if content is not None:
-        return content
-    # return file contents if set
-    if file is not None:
-        return _read_file(file)
-    # should not reach here
-    raise RuntimeError("unreachable: neither content nor file is set")

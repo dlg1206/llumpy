@@ -9,7 +9,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ._message import ConversationBuilder, Conversation
+from ._conversation_builder import ConversationBuilder
+from ._models import Conversation
 from ..retry import DEFAULT_MAX_RETRIES, RetryHandler, AsyncRetryHandler
 
 
