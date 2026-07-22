@@ -1,7 +1,7 @@
 """
-File: _model_client.py
+File: _async_model_client.py
 
-Description: Generic models for synchronous clients
+Description: Generic models for asynchronous clients
 
 @author Derek Garcia
 """
@@ -10,38 +10,38 @@ from typing import Any
 
 from ._conversation_builder import ConversationBuilder
 from ._models import Conversation
-from ..retry import DEFAULT_MAX_RETRIES, RetryHandler
+from ..retry import DEFAULT_MAX_RETRIES, AsyncRetryHandler
 
 
-class ModelClient(ABC):
-    """Placeholder class for synchronous clients"""
+class AsyncModelClient(ABC):
+    """Placeholder class for asynchronous clients"""
 
     def __init__(self, model: str):
         """
         Create new client
 
-        :param model: Model to use
+        :param model: Name of model to use
         """
         self._model = model
 
     @abstractmethod
-    def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response object"""
 
     @abstractmethod
-    def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
+    async def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
         """Raw API call, returns vendor-specific response stream object"""
 
     @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
 
-    def prompt_one(self,
-                   message: str,
-                   *,
-                   handler: RetryHandler | None = None,
-                   retries: int = DEFAULT_MAX_RETRIES,
-                   **prompt_kwargs: Any) -> Any:
+    async def prompt_one(self,
+                         message: str,
+                         *,
+                         handler: AsyncRetryHandler | None = None,
+                         retries: int = DEFAULT_MAX_RETRIES,
+                         **prompt_kwargs: Any) -> Any:
         """
         Prompt a model for simple text return
 
@@ -52,14 +52,14 @@ class ModelClient(ABC):
         :return: Completed chat response text or parsed object from retry handler
         """
         conversation = ConversationBuilder().user(message).build()
-        return self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
+        return await self.prompt_many(conversation, handler=handler, retries=retries, **prompt_kwargs)
 
-    def prompt_many(self,
-                    conversation: Conversation,
-                    *,
-                    handler: RetryHandler | None = None,
-                    retries: int = DEFAULT_MAX_RETRIES,
-                    **prompt_kwargs: Any) -> Any:
+    async def prompt_many(self,
+                          conversation: Conversation,
+                          *,
+                          handler: AsyncRetryHandler | None = None,
+                          retries: int = DEFAULT_MAX_RETRIES,
+                          **prompt_kwargs: Any) -> Any:
         """
         Prompt a model for simple text return
 
@@ -71,13 +71,14 @@ class ModelClient(ABC):
         """
         # wrap with handler if provided
         if handler:
-            return handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs), self.extract_text,
-                                      retries)
+            return await handler.try_prompt(lambda: self.vendor_prompt(conversation, **prompt_kwargs),
+                                            self.extract_text,
+                                            retries)
         # else just prompt
-        return self.extract_text(self.vendor_prompt(conversation, **prompt_kwargs))
+        return self.extract_text(await self.vendor_prompt(conversation, **prompt_kwargs))
 
     @abstractmethod
-    def validate(self) -> None:
+    async def validate(self) -> None:
         """Validate the client is ready to use"""
 
     @property
