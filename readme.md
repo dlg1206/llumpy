@@ -5,6 +5,11 @@
 > [!WARNING]
 > OpenAI and Anthropic clients have not been thoroughly tested due to lack of API keys.
 
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Advanced Usage](#advanced-usage)
+- [Custom Clients and Handlers](#custom-clients-and-handlers)
+
 ## Installation
 
 ```bash
@@ -17,7 +22,7 @@ or add to `requirements.txt`
 llumpy @ git+https://github.com/dlg1206/llumpy.git
 ```
 
-## Quickstart
+## Basic Usage
 
 ### Creating Clients
 
@@ -59,6 +64,29 @@ print(response)
 
 > Few-shot prompt to an LLM. Useful for advanced, chain-of-thought prompting
 
+```python3
+import textwrap
+
+from llumpy.providers import OllamaClient
+
+llama3_8b = OllamaClient('llama3', '8b')
+response = (llama3_8b.system(
+    "You are a pirate. You must speak as a pirate at all times, using phrases like 'Arrr', 'matey', and 'shiver me timbers'.")
+            .user("What is the weather like today?")
+            .assistant(
+    "Arrr matey! The skies be grey as Davy Jones' locker and the winds be howlin' somethin' fierce! Shiver me timbers, tis a fine day fer sailin'!")
+            .user("What should I wear?")
+            .prompt())
+
+print(textwrap.fill(response, width=100))
+```
+
+<img src="assets/prompt_many.png" alt="terminal output many prompt">
+
+Using prompts directly are for single use only. For reusable conversations, the `ConversationBuilder` can be used and
+ensures the resulting conversions is in a valid order to send to the LLM. The resulting conversation can be used with
+the client's `prompt_many()` method.
+
 ```python
 import textwrap
 
@@ -80,16 +108,15 @@ response = llama3_8b.prompt_many(conversation)
 print(textwrap.fill(response, width=100))
 ```
 
-<img src="assets/prompt_many.png" alt="terminal output many prompt">
-
-The `ConversationBuilder` is the main builder for LLM conversations. It ensures the resulting conversions is in a valid
-order to send to the LLM. Using the `file` param allows to read prompts directly from files like so:
+Using the `file` param allows to read prompts directly from files like so:
 
 ```python
 from llumpy.core import ConversationBuilder
 
 conversation = ConversationBuilder().user(file="prompts/user.prompt").build()
 ```
+
+Single use conversations also support the `file` param.
 
 The builder also supports ephemeral messages, allowing for a root conversation to be reused with only the final prompt
 swapped out like so:
@@ -104,7 +131,8 @@ for tail in ['bar', 'baz']:
 
 <img src="assets/build_with_usage.png" alt="terminal output build with">
 
-`build_with_user()` and `build_with_assistant()` also support the `file` arg as well.
+`build_with_user()` and `build_with_assistant()` also support the `file` arg as well. Single use conversations do **NOT**
+support ephemeral messages
 
 #### Streaming Response
 
@@ -166,6 +194,25 @@ if __name__ == '__main__':
 ```
 
 <img src="assets/async_prompt_one.png" alt="terminal output one prompt for async">
+
+```python
+import asyncio
+
+from llumpy.core import ConversationBuilder
+from llumpy.providers import AsyncOllamaClient
+
+
+async def main():
+    llama3_8b = AsyncOllamaClient('llama3', '8b')
+    conversation = ConversationBuilder().user("Hello!").build()
+
+    async for chunk in await llama3_8b.prompt_stream(conversation):
+        print(llama3_8b.extract_text(chunk), end="_", flush=True)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
 
 ### Retry Handlers
 
