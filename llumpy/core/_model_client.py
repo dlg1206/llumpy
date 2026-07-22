@@ -39,7 +39,7 @@ class ModelClient(ABC):
     def prompt_one(self,
                    message: str,
                    *,
-                   handler: RetryHandler = None,
+                   handler: RetryHandler | None = None,
                    retries: int = DEFAULT_MAX_RETRIES,
                    **prompt_kwargs: Any) -> Any:
         """
@@ -57,7 +57,7 @@ class ModelClient(ABC):
     def prompt_many(self,
                     conversation: Conversation,
                     *,
-                    handler: RetryHandler = None,
+                    handler: RetryHandler | None = None,
                     retries: int = DEFAULT_MAX_RETRIES,
                     **prompt_kwargs: Any) -> Any:
         """
@@ -114,7 +114,7 @@ class AsyncModelClient(ABC):
     async def prompt_one(self,
                          message: str,
                          *,
-                         handler: AsyncRetryHandler = None,
+                         handler: AsyncRetryHandler | None = None,
                          retries: int = DEFAULT_MAX_RETRIES,
                          **prompt_kwargs: Any) -> Any:
         """
@@ -132,7 +132,7 @@ class AsyncModelClient(ABC):
     async def prompt_many(self,
                           conversation: Conversation,
                           *,
-                          handler: AsyncRetryHandler = None,
+                          handler: AsyncRetryHandler | None = None,
                           retries: int = DEFAULT_MAX_RETRIES,
                           **prompt_kwargs: Any) -> Any:
         """

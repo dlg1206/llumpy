@@ -20,7 +20,7 @@ OPENAI_BASE_URL = "https://api.openai.com/v1"
 class OpenAIClient(ModelClient):
     """Client interface for interacting with OpenAI API"""
 
-    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
 
@@ -98,7 +98,7 @@ class OpenAIClient(ModelClient):
 class AsyncOpenAIClient(AsyncModelClient):
     """Async client interface for interacting with OpenAI API"""
 
-    def __init__(self, model: str, api_key: str = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
 

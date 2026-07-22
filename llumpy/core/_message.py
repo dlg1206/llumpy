@@ -60,8 +60,8 @@ class _BuildMixIn(ABC):
 
     def _build_with(self,
                     role: Literal[Role.USER, Role.ASSISTANT],
-                    content: str = None,
-                    file: str = None) -> Conversation:
+                    content: str | None = None,
+                    file: str | None = None) -> Conversation:
         """
         Build a conversation without appending the last message to the current conversation
 
@@ -89,7 +89,7 @@ class ConversationBuilder:
         """
         self._messages: List[Message] = []
 
-    def system(self, content: str = None, *, file: str = None) -> "_UserStepOrBuildStep":
+    def system(self, content: str | None = None, *, file: str | None = None) -> "_UserStepOrBuildStep":
         """
         Add a system message
 
@@ -102,7 +102,7 @@ class ConversationBuilder:
         self._messages.append(Message(Role.SYSTEM, content))
         return _UserStepOrBuildStep(self._messages)
 
-    def user(self, content: str = None, *, file: str = None) -> "_AssistantOrBuildStep":
+    def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrBuildStep":
         """
         Add a user message
 
@@ -118,7 +118,7 @@ class ConversationBuilder:
 class _UserStepOrBuildStep(_BuildMixIn):
     """User turn in the conversation"""
 
-    def user(self, content: str = None, *, file: str = None) -> "_AssistantOrBuildStep":
+    def user(self, content: str | None = None, *, file: str | None = None) -> "_AssistantOrBuildStep":
         """
         Add a user message
 
@@ -130,7 +130,7 @@ class _UserStepOrBuildStep(_BuildMixIn):
         self._messages.append(Message(Role.USER, content))
         return _AssistantOrBuildStep(self._messages)
 
-    def build_with_user(self, content: str = None, *, file: str = None) -> Conversation:
+    def build_with_user(self, content: str | None = None, *, file: str | None = None) -> Conversation:
         """
         Build with a temporary user message
 
@@ -144,7 +144,7 @@ class _UserStepOrBuildStep(_BuildMixIn):
 class _AssistantOrBuildStep(_BuildMixIn):
     """Assistant or build step in the conversation"""
 
-    def assistant(self, content: str = None, *, file: str = None) -> "_UserStepOrBuildStep":
+    def assistant(self, content: str | None = None, *, file: str | None = None) -> "_UserStepOrBuildStep":
         """
         Add an assistant message
 
@@ -156,7 +156,7 @@ class _AssistantOrBuildStep(_BuildMixIn):
         self._messages.append(Message(Role.ASSISTANT, content))
         return _UserStepOrBuildStep(self._messages)
 
-    def build_with_assistant(self, content: str = None, *, file: str = None) -> Conversation:
+    def build_with_assistant(self, content: str | None = None, *, file: str | None = None) -> Conversation:
         """
         Build with a temporary assistant message
 
@@ -185,13 +185,19 @@ def _validate_args(content: str | None, file: str | None) -> str:
     :param content: LLM content arg
     :param file: File path to LLM content
     :raises ValueError: If nether or both content or file provided
-    :return
+    :return: File content or content
     """
     # neither provided
-    if not (content or file):
+    if content is None and file is None:
         raise ValueError("Either content or file must be provided")
     # both provided
-    if content and file:
+    if content is not None and file is not None:
         raise ValueError("Only one of content or file may be provided")
-    # return content of prompt
-    return _read_file(file) if file else content
+    # return content if set
+    if content is not None:
+        return content
+    # return file contents if set
+    if file is not None:
+        return _read_file(file)
+    # should not reach here
+    raise RuntimeError("unreachable: neither content nor file is set")
