@@ -2,7 +2,7 @@
 
 > Client wrapper library for OpenAI, Anthropic, and Ollama APIs
 
-> [!WARNING]  
+> [!WARNING]
 > OpenAI and Anthropic clients have not been thoroughly tested due to lack of API keys.
 
 ## Installation
@@ -22,7 +22,7 @@ llumpy @ git+https://github.com/dlg1206/llumpy.git
 ### Creating Clients
 
 ```python
-from llumpy import AnthropicClient, OpenAIClient, OllamaClient
+from llumpy.providers import AnthropicClient, OpenAIClient, OllamaClient
 
 # API key env var: OPENAI_API_KEY
 gpt = OpenAIClient('gpt-5.4')
@@ -35,7 +35,7 @@ llama3_latest = OllamaClient('llama3')  # default ':latest'
 llama3_8b = OllamaClient('llama3', '8b')
 ```
 
-> [!WARNING]  
+> [!WARNING]
 > Clients will fail to be initialized if API keys are bad, models do not exist, or key
 > does not have access to that model.
 
@@ -46,7 +46,7 @@ llama3_8b = OllamaClient('llama3', '8b')
 > One-shot prompt to an LLM. Useful for simple, one off prompts
 
 ```python
-from llumpy import OllamaClient
+from llumpy.providers import OllamaClient
 
 llama3_8b = OllamaClient('llama3', '8b')
 response = llama3_8b.prompt_one("Hello!")
@@ -62,7 +62,8 @@ print(response)
 ```python
 import textwrap
 
-from llumpy import OllamaClient, Conversation, ConversationBuilder
+from llumpy.core import ConversationBuilder
+from llumpy.providers import OllamaClient
 
 llama3_8b = OllamaClient('llama3', '8b')
 conversation = (
@@ -85,7 +86,7 @@ The `ConversationBuilder` is the main builder for LLM conversations. It ensures 
 order to send to the LLM. Using the `file` param allows to read prompts directly from files like so:
 
 ```python
-from core import ConversationBuilder
+from llumpy.core import ConversationBuilder
 
 conversation = ConversationBuilder().user(file="prompts/user.prompt").build()
 ```
@@ -94,13 +95,11 @@ The builder also supports ephemeral messages, allowing for a root conversation t
 swapped out like so:
 
 ```python
-from llumpy import ConversationBuilder
+from llumpy.core import ConversationBuilder
 
 builder = ConversationBuilder().system("Foo")
 for tail in ['bar', 'baz']:
     print(builder.build_with_user(tail))
-
-print(builder.build())
 ```
 
 <img src="assets/build_with_usage.png" alt="terminal output build with">
@@ -112,7 +111,8 @@ print(builder.build())
 > Stream token responses from LLM instead of waiting for complete response
 
 ```python
-from llumpy import OllamaClient, ConversationBuilder
+from llumpy.core import ConversationBuilder
+from llumpy.providers import OllamaClient
 
 llama3_8b = OllamaClient('llama3', '8b')
 conversation = ConversationBuilder().user("Hello!").build()
@@ -128,7 +128,8 @@ for chunk in llama3_8b.prompt_stream(conversation):
 > For other LLM params, they can be provided as additional params in the prompt method
 
 ```python
-from llumpy import OllamaClient, ConversationBuilder
+from llumpy.core import ConversationBuilder
+from llumpy.providers import OllamaClient
 
 llama3_8b = OllamaClient('llama3', '8b')
 conversation = (ConversationBuilder()
@@ -151,7 +152,7 @@ print(llama3_8b.prompt_many(conversation, temperature=1.0))
 ```python
 import asyncio
 
-from llumpy import AsyncOllamaClient
+from llumpy.providers import AsyncOllamaClient
 
 
 async def main():
@@ -171,7 +172,8 @@ if __name__ == '__main__':
 > Retry handlers validate the LLM response and automatically reprompts if fails
 
 ```python
-from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
+from llumpy.providers import OllamaClient
+from llumpy.retry import JSONRetryHandler
 
 llama3_8b = OllamaClient('llama3', '8b')
 
@@ -181,12 +183,12 @@ print(llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
 <img src="assets/retry_handler_fail.png" alt="terminal failure when exceed retries">
 
 ```python
-from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
+from llumpy.providers import OllamaClient
+from llumpy.retry import JSONRetryHandler
 
 llama3_8b = OllamaClient('llama3', '8b')
 
-conversation = ConversationBuilder().system("Only reply in JSON").user("Hello!").build()
-print(llama3_8b.prompt_many(conversation, handler=JSONRetryHandler()))
+print(llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
 ```
 
 <img src="assets/retry_handler_pass.png" alt="terminal success with handler">
@@ -199,7 +201,9 @@ See [Custom Handlers](#custom-handlers) for custom handlers.
 > To access vendor specific LLM responses, use the `vendor_prompt()` or `vender_prompt_stream()` methods
 
 ```python
-from llumpy import OllamaClient, ConversationBuilder, JSONRetryHandler
+from llumpy.providers import OllamaClient
+from llumpy.retry import JSONRetryHandler
+from llumpy.core import ConversationBuilder
 
 llama3_8b = OllamaClient('llama3', '8b')
 
@@ -221,7 +225,7 @@ print(type(response))
 ```python
 from typing import Any
 
-from llumpy import ModelClient, Conversation, AsyncModelClient
+from llumpy.core import ModelClient, Conversation, AsyncModelClient
 
 
 class MyLLMClient(ModelClient):
@@ -267,7 +271,7 @@ class MyAsyncLLMClient(AsyncModelClient):
 ```python
 from typing import Any, Tuple, Type
 
-from llumpy import RetryHandler, AsyncRetryHandler
+from llumpy.retry import RetryHandler, AsyncRetryHandler
 
 
 class MyRetryHandler(RetryHandler):
