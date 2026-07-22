@@ -9,10 +9,11 @@ from ._conversation_builder import ConversationBuilder as ConversationBuilder
 from ._model_client import (ModelClient as ModelClient,
                             AsyncModelClient as AsyncModelClient,
                             load_api_key as load_api_key)
-from ._models import (Conversation as Conversation,
-                      Message as Message)
+from ._models import (Role as Role,
+                      Message as Message,
+                      Conversation as Conversation)
 
 __all__ = [
-    "ConversationBuilder", "Conversation", "Message",
+    "ConversationBuilder", "Role", "Message", "Conversation",
     "ModelClient", "AsyncModelClient", "load_api_key"
 ]

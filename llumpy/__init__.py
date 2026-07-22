@@ -14,8 +14,9 @@ from .client import (AnthropicClient as AnthropicClient,
                      InvalidAPIKeyError as InvalidAPIKeyError,
                      ModelNotFoundError as ModelNotFoundError, )
 
-from .core import (Conversation as Conversation,
+from .core import (Role as Role,
                    Message as Message,
+                   Conversation as Conversation,
                    ConversationBuilder as ConversationBuilder,
                    ModelClient as ModelClient,
                    AsyncModelClient as AsyncModelClient)
@@ -33,7 +34,7 @@ __all__ = [
     "OllamaClient", "AsyncOllamaClient",
     "InvalidAPIKeyError", "ModelNotFoundError",
     # core
-    "Conversation", "Message", "ConversationBuilder",
+    "ConversationBuilder", "Role", "Message", "Conversation",
     "ModelClient", "AsyncModelClient",
     # retry
     "ExceededRetriesError",
