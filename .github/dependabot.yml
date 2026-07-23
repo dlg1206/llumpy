@@ -1,5 +1,6 @@
 version: 2
 updates:
+  # llumpy
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -24,6 +25,27 @@ updates:
           - "minor"
           - "patch"
     # Ignore major changes
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # CI
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       - dependency-name: "*"
         update-types:
