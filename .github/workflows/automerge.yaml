@@ -3,7 +3,7 @@ on: pull_request_target
 
 jobs:
   automerge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # guard to ensure only bot can automerge
     if: github.actor == 'dependabot[bot]'
 
@@ -21,3 +21,4 @@ jobs:
       - uses: fastify/github-action-merge-dependabot@v3.15.0
         with:
           github-token: ${{ steps.app-token.outputs.token }}
+          use-github-auto-merge: true
