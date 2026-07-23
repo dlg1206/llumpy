@@ -58,7 +58,7 @@ response = llama3_8b.prompt_one("Hello!")
 print(response)
 ```
 
-<img src="assets/prompt_one.png" alt="terminal output simple prompt">
+<img src="docs/_static/assets/prompt_one.png" alt="terminal output simple prompt">
 
 #### Prompt Many
 
@@ -81,7 +81,7 @@ response = (llama3_8b.system(
 print(textwrap.fill(response, width=100))
 ```
 
-<img src="assets/prompt_many.png" alt="terminal output many prompt">
+<img src="docs/_static/assets/prompt_many.png" alt="terminal output many prompt">
 
 Using prompts directly are for single use only. For reusable conversations, the `ConversationBuilder` can be used and
 ensures the resulting conversions is in a valid order to send to the LLM. The resulting conversation can be used with
@@ -129,7 +129,7 @@ for tail in ['bar', 'baz']:
     print(builder.build_with_user(tail))
 ```
 
-<img src="assets/build_with_usage.png" alt="terminal output build with">
+<img src="docs/_static/assets/build_with_usage.png" alt="terminal output build with">
 
 `build_with_user()` and `build_with_assistant()` also support the `file` arg as well. Single use conversations do **NOT**
 support ephemeral messages
@@ -149,7 +149,7 @@ for chunk in llama3_8b.prompt_stream(conversation):
     print(llama3_8b.extract_text(chunk), end="_", flush=True)
 ```
 
-<img src="assets/prompt_stream.png" alt="terminal output for streamed response">
+<img src="docs/_static/assets/prompt_stream.png" alt="terminal output for streamed response">
 
 #### Additional LLM Params
 
@@ -169,7 +169,7 @@ print("---")
 print(llama3_8b.prompt_many(conversation, temperature=1.0))
 ```
 
-<img src="assets/prompt_kwargs.png" alt="terminal output for additional params">
+<img src="docs/_static/assets/prompt_kwargs.png" alt="terminal output for additional params">
 
 ## Advanced Usage
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     asyncio.run(main())
 ```
 
-<img src="assets/async_prompt_one.png" alt="terminal output one prompt for async">
+<img src="docs/_static/assets/async_prompt_one.png" alt="terminal output one prompt for async">
 
 ```python
 import asyncio
@@ -227,7 +227,7 @@ llama3_8b = OllamaClient('llama3', '8b')
 print(llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2))
 ```
 
-<img src="assets/retry_handler_fail.png" alt="terminal failure when exceed retries">
+<img src="docs/_static/assets/retry_handler_fail.png" alt="terminal failure when exceed retries">
 
 ```python
 from llumpy.providers import OllamaClient
@@ -238,7 +238,7 @@ llama3_8b = OllamaClient('llama3', '8b')
 print(llama3_8b.system("Only reply in JSON").user("Hello!").prompt(handler=JSONRetryHandler()))
 ```
 
-<img src="assets/retry_handler_pass.png" alt="terminal success with handler">
+<img src="docs/_static/assets/retry_handler_pass.png" alt="terminal success with handler">
 
 Currently, `JSONRetryHandler` is the only handler that parses the LLM response into a JSON object.
 See [Custom Handlers](#custom-handlers) for custom handlers.
@@ -261,7 +261,7 @@ response = llama3_8b.vendor_prompt(conversation)
 print(type(response))
 ```
 
-<img src="assets/vendor_prompt.png" alt="vendor type">
+<img src="docs/_static/assets/vendor_prompt.png" alt="vendor type">
 
 ## Custom Clients and Handlers
 
