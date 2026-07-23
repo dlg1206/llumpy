@@ -14,7 +14,7 @@ from ..core import ModelNotFoundError
 
 # ollama details
 DEFAULT_SERVER_URL = "http://localhost:11434"
-DEFAULT_MODEL_TAG = "lastest"
+DEFAULT_MODEL_TAG = "latest"
 
 OLLAMA_SERVER_URL_ENV = "OLLAMA_SERVER_URL"
 
@@ -45,7 +45,7 @@ class _OllamaClientMixin:
     def _init_ollama(self, model_name: str, model_tag: str, server_url: str | None = None) -> str:
         """
         Create new Ollama Client
-        Server will check param, env, then env before defaults
+        Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
 
         :param model_name: Name of model to use
         :param model_tag: Model tag to use
@@ -80,7 +80,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
     def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
         """
         Create new Ollama Client
-        Server will check param, env, then env before defaults
+        Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
 
         :param model_name: Name of model to use
         :param model_tag: Optional model tag (Default: latest)
@@ -102,7 +102,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
         """
         Ensure the ollama server is available and model is available
 
-        :raises InvalidOllamaServer: If could not connect to the Ollama server
+        :raises InvalidOllamaServerError: If could not connect to the Ollama server
         :raises ModelNotFoundError: If could not find requested model in Ollama library
         """
         # verify ollama server up
@@ -151,7 +151,7 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
     def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
         """
         Create new Ollama Client
-        Server will check param, env, then env before defaults
+        Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
 
         :param model_name: Name of model to use
         :param model_tag: Optional model tag (Default: latest)
@@ -174,7 +174,7 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
         """
         Ensure the ollama server is available and model is available
 
-        :raises InvalidOllamaServer: If could not connect to the Ollama server
+        :raises InvalidOllamaServerError: If could not connect to the Ollama server
         :raises ModelNotFoundError: If could not find requested model in Ollama library
         """
         async with httpx.AsyncClient() as client:

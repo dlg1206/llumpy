@@ -38,6 +38,8 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "docs(deps)"
     groups:
       docs:
         patterns:

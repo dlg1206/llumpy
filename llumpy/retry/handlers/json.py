@@ -20,9 +20,9 @@ class _JSONRetryHandlerBase(ABC):
     @property
     def _retry_on(self) -> Tuple[Type[Exception], ...]:
         """
-        Retry on JSON decode
+        Retry on JSON decode errors
 
-        :return JSON decode errors
+        :return: Tuple of exception types to retry on
         """
         return (JSONDecodeError,)
 
@@ -46,4 +46,4 @@ class JSONRetryHandler(_JSONRetryHandlerBase, RetryHandler):
 
 
 class AsyncJSONRetryHandler(_JSONRetryHandlerBase, AsyncRetryHandler):
-    """Handler for parsing JSON from LLM responses"""
+    """Async handler for parsing JSON from LLM responses"""

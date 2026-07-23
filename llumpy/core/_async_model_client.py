@@ -25,7 +25,7 @@ class _AsyncPromptMixIn:
                      retries: int = DEFAULT_MAX_RETRIES,
                      **prompt_kwargs: Any) -> Any:
         """
-        Prompt a model for simple text return
+        Prompt the model with the conversation built so far
 
         :param handler: Optional handler to ensure the response is valid (Default: None)
         :param retries: Number of retries allowed (Default: 5)
@@ -53,9 +53,9 @@ class _UserStep(_MessagesHolder):
         """
         Add a user message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of user message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: Assistant or build step
+        :return: Assistant or prompt step
         """
         return _AssistantOrAsyncPromptStep(self._add(Role.USER, content, file), self._client)
 
@@ -65,7 +65,7 @@ class _UserOrAsyncPromptStep(_UserStep, _AsyncPromptMixIn):
 
 
 class _AssistantOrAsyncPromptStep(_MessagesHolder, _AsyncPromptMixIn):
-    """Assistant or build step in the conversation"""
+    """Assistant or prompt step in the conversation"""
 
     def __init__(self, messages: List[Message], client: "AsyncModelClient"):
         """
@@ -81,7 +81,7 @@ class _AssistantOrAsyncPromptStep(_MessagesHolder, _AsyncPromptMixIn):
         """
         Add an assistant message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of assistant message (Default: None)
         :param file: File to read content from (Default: None)
         :return: User step or prompt step
         """
@@ -97,7 +97,7 @@ class _SingleUseConversationMixIn:
 
         :param content: Content of system message (Default: None)
         :param file: File to read content from (Default: None)
-        :raises ValueError: If nether or both content or file provided
+        :raises ValueError: If neither or both content and file are provided
         :return: User step
         """
         validated = _validate_args(content, file)
@@ -109,14 +109,14 @@ class _SingleUseConversationMixIn:
 
         :param content: Content of user message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: Assistant or build step
+        :return: Assistant or prompt step
         """
         validated = _validate_args(content, file)
         return _AssistantOrAsyncPromptStep([Message(Role.USER, validated)], self)
 
 
 class AsyncModelClient(_SingleUseConversationMixIn, ABC):
-    """Placeholder class for asynchronous clients"""
+    """Abstract base class for asynchronous model clients"""
 
     def __init__(self, model: str):
         """
@@ -145,7 +145,7 @@ class AsyncModelClient(_SingleUseConversationMixIn, ABC):
                          retries: int = DEFAULT_MAX_RETRIES,
                          **prompt_kwargs: Any) -> Any:
         """
-        Prompt a model for simple text return
+        Prompt a model with a single user message
 
         :param message: Message to send to LLM
         :param handler: Optional handler to ensure the response is valid (Default: None)
@@ -163,7 +163,7 @@ class AsyncModelClient(_SingleUseConversationMixIn, ABC):
                           retries: int = DEFAULT_MAX_RETRIES,
                           **prompt_kwargs: Any) -> Any:
         """
-        Prompt a model for simple text return
+        Prompt a model with a full conversation
 
         :param conversation: Conversation with prompt to send to LLM
         :param handler: Optional handler to ensure the response is valid (Default: None)

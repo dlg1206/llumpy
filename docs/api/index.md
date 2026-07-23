@@ -35,6 +35,7 @@
 
    ~llumpy.providers.OllamaClient
    ~llumpy.providers.AsyncOllamaClient
+   ~llumpy.providers.InvalidOllamaServerError
 ```
 
 ## Core

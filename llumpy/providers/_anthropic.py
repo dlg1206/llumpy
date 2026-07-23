@@ -54,7 +54,7 @@ class AnthropicClient(ModelClient):
 
     def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[RawMessageStreamEvent]:
         """
-        Prompt a model for Anthropic chat completion
+        Prompt a model for a streamed Anthropic chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
@@ -77,6 +77,7 @@ class AnthropicClient(ModelClient):
     def extract_text(self, response: Message | RawMessageStreamEvent) -> str | None:
         """
         Extract LLM response text from Anthropic object
+
         :param response: Anthropic chat response or stream chunk
         :return: Text message if present, else None
         """
@@ -94,8 +95,8 @@ class AnthropicClient(ModelClient):
         """
         Verify Anthropic key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If the Anthropic key is invalid
-        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises InvalidAPIKeyError: If the Anthropic key is invalid
+        :raises ModelNotFoundError: If requested model does not exist
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
@@ -109,7 +110,7 @@ class AnthropicClient(ModelClient):
 
 
 class AsyncAnthropicClient(AsyncModelClient):
-    """Client interface for interacting with Anthropic API"""
+    """Async client interface for interacting with Anthropic API"""
 
     def __init__(self, model: str):
         """
@@ -146,7 +147,7 @@ class AsyncAnthropicClient(AsyncModelClient):
                                    conversation: Conversation,
                                    **prompt_kwargs: Any) -> AsyncStream[RawMessageStreamEvent]:
         """
-        Prompt a model for Anthropic chat completion
+        Prompt a model for a streamed Anthropic chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
@@ -184,8 +185,8 @@ class AsyncAnthropicClient(AsyncModelClient):
         """
         Verify Anthropic key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If the Anthropic key is invalid
-        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises InvalidAPIKeyError: If the Anthropic key is invalid
+        :raises ModelNotFoundError: If requested model does not exist
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
