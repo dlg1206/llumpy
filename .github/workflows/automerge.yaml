@@ -3,7 +3,7 @@ on: pull_request_target
 
 jobs:
   automerge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # guard to ensure only bot can automerge
     if: github.actor == 'dependabot[bot]'
 
