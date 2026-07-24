@@ -4,18 +4,19 @@
 
 ## 🤖 Supported Providers
 
-- [Anthropic](TODO)
-- [OpenAI](TODO)
-- [Ollama](TODO)
+- [Anthropic](https://dlg1206.github.io/llumpy/usage/providers.html#anthropic)
+- [OpenAI](https://dlg1206.github.io/llumpy/usage/providers.html#openai)
+- [Ollama](https://dlg1206.github.io/llumpy/usage/providers.html#ollama)
 
 ## ✨ Features
 
-- [One](TODO) or [Few](TODO) Shot Prompting
-- [Load Prompts From File](TODO)
-- [Streaming LLM Responses](TODO)
-- [Asynchronous Variants](TODO)
-- [Automatic Retry Handlers](TODO)
-- [Custom Provider Clients](TODO)
+- [One](https://dlg1206.github.io/llumpy/usage/prompting.html#one-shot)
+  or [Few](https://dlg1206.github.io/llumpy/usage/prompting.html#few-shot) Shot Prompting
+- [Streaming LLM Responses](https://dlg1206.github.io/llumpy/usage/prompting.html#streaming-response)
+- [Load Prompts From File](https://dlg1206.github.io/llumpy/usage/prompting.html#file-param)
+- [Asynchronous Variants](https://dlg1206.github.io/llumpy/async/index.html)
+- [Automatic Retry Handlers](https://dlg1206.github.io/llumpy/advanced_usage/custom_retry_handlers.html)
+- [Custom Provider Clients](https://dlg1206.github.io/llumpy/advanced_usage/custom_clients.html)
 
 ## Installation
 
@@ -63,4 +64,4 @@ print(response)
 
 <img src="assets/prompt_one.png" alt="terminal output simple prompt">
 
-See [documentation](TODO) for additional usage.
+See [documentation](https://dlg1206.github.io/llumpy) for additional usage.
