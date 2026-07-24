@@ -1,8 +1,10 @@
 name: Build and Deploy Sphinx Docs
-# TODO - only on main
+
 on:
+  pull_request:
+    branches: [ main ]
   push:
-    branches: [ docs/docs-page ]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -33,13 +35,19 @@ jobs:
       - name: Build Sphinx docs
         run: sphinx-build -b html docs docs/build/html
 
+      # only upload on push to main
       - uses: actions/configure-pages@v5
+        if: github.event_name == 'push'
+
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push'
         with:
           path: docs/build/html
 
   deploy:
     needs: build
+    # only deploy on main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment:
       name: documentation
