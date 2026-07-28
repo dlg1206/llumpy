@@ -1,4 +1,7 @@
-# llumpy
+<h1>
+    <img alt="llumpy mascot" src="assets/llumpy.png" width="150">
+    llumpy
+</h1>
 
 > Provider-agnostic client wrapper for prompting LLMs
 
