@@ -24,13 +24,13 @@
 ## Installation
 
 ```bash
-pip install git+https://github.com/dlg1206/llumpy.git
+pip install git+https://github.com/dlg1206/llumpy.git@v1.0.0
 ```
 
 or add to `requirements.txt`
 
 ```txt
-llumpy @ git+https://github.com/dlg1206/llumpy.git
+llumpy @ git+https://github.com/dlg1206/llumpy.git@v1.0.0
 ```
 
 ## Quickstart
