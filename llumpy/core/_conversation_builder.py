@@ -38,9 +38,9 @@ class _MessagesHolder:
         Validate args, append the message, and return the message list
 
         :param role: Role of the message
-        :param content: Content of system message (Default: None)
+        :param content: Content of the message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: List with updated method
+        :return: Updated list of messages
         """
         validated = _validate_args(content, file)
         self._messages.append(Message(role, validated))
@@ -54,7 +54,7 @@ class _UserStep(_MessagesHolder):
         """
         Add a user message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of user message (Default: None)
         :param file: File to read content from (Default: None)
         :return: Assistant or build step
         """
@@ -64,9 +64,9 @@ class _UserStep(_MessagesHolder):
         """
         Build with a temporary user message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of user message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: List of messages
+        :return: Immutable conversation
         """
         return _build_with(self._messages, Role.USER, content, file)
 
@@ -82,9 +82,9 @@ class _AssistantOrBuildStep(_MessagesHolder, _BuildMixIn):
         """
         Add an assistant message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of assistant message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: User step
+        :return: User or build step
         """
         return _UserOrBuildStep(self._add(Role.ASSISTANT, content, file))
 
@@ -92,9 +92,9 @@ class _AssistantOrBuildStep(_MessagesHolder, _BuildMixIn):
         """
         Build with a temporary assistant message
 
-        :param content: Content of system message (Default: None)
+        :param content: Content of assistant message (Default: None)
         :param file: File to read content from (Default: None)
-        :return: List of messages
+        :return: Immutable conversation
         """
         return _build_with(self._messages, Role.ASSISTANT, content, file)
 
@@ -108,7 +108,7 @@ class ConversationBuilder(_MessagesHolder):
 
         :param content: Content of system message (Default: None)
         :param file: File to read content from (Default: None)
-        :raises ValueError: If nether or both content or file provided
+        :raises ValueError: If neither or both content and file are provided
         :return: User step
         """
         return _UserStep(self._add(Role.SYSTEM, content, file))
@@ -133,7 +133,7 @@ def _build_with(messages: List[Message],
 
     :param messages: Messages in the current conversation
     :param role: Either temporary user or assistant role to the conversation
-    :param content: Content of system message (Default: None)
+    :param content: Content of the message (Default: None)
     :param file: File to read content from (Default: None)
     :return: Immutable conversation
     """

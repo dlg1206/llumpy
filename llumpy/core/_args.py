@@ -25,7 +25,7 @@ def _validate_args(content: str | None, file: str | None) -> str:
 
     :param content: LLM content arg
     :param file: File path to LLM content
-    :raises ValueError: If nether or both content or file provided
+    :raises ValueError: If neither or both content and file are provided
     :return: File content or content
     """
     # neither provided

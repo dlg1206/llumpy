@@ -1,0 +1,57 @@
+name: Build and Deploy Sphinx Docs
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install Sphinx dependencies
+        run: pip install -r docs/requirements.txt
+
+      # required for doc generation
+      - name: Install llumpy
+        run: pip install -e .
+
+      - name: Build Sphinx docs
+        run: sphinx-build -b html docs docs/build/html
+
+      # only upload on push to main
+      - uses: actions/configure-pages@v5
+        if: github.event_name == 'push'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push'
+        with:
+          path: docs/build/html
+
+  deploy:
+    needs: build
+    # only deploy on main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment:
+      name: documentation
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

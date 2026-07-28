@@ -29,6 +29,28 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+  # docs
+  - package-ecosystem: "pip"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "docs(deps)"
+    groups:
+      docs:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
 
   # CI
   - package-ecosystem: "github-actions"

@@ -1,0 +1,7 @@
+.align-default {
+    margin-left: 0 !important;
+}
+
+a:visited {
+    color: var(--color-link) !important;
+}

@@ -24,9 +24,9 @@ class OpenAIClient(ModelClient):
         Initialize connection to OpenAI compatible server
 
         :param model: LLM to use
-        :param api_key: API key to use (Default: OPENAI_API_KEY_ENV)
+        :param api_key: API key to use (Default: OPENAI_API_KEY env var)
         :param base_url: URL of api server (Default: OpenAI)
-        :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY_ENV' env var is not defined
+        :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY' env var is not defined
         """
         super().__init__(model)
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
@@ -40,7 +40,7 @@ class OpenAIClient(ModelClient):
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
-        :return: Chat completion or stream
+        :return: Chat completion
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against true stream
@@ -53,7 +53,7 @@ class OpenAIClient(ModelClient):
 
     def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[ChatCompletionChunk]:
         """
-        Prompt a model for OpenAI chat completion
+        Prompt a model for a streamed OpenAI chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
@@ -82,8 +82,8 @@ class OpenAIClient(ModelClient):
         """
         Verify OpenAI key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If the OpenAI key is invalid
-        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises InvalidAPIKeyError: If the OpenAI key is invalid
+        :raises ModelNotFoundError: If requested model does not exist
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
@@ -106,7 +106,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         :param model: LLM to use
         :param api_key: API key to use (Default: None)
         :param base_url: URL of api server (Default: OpenAI)
-        :raises EnvironmentError: api_key is none and the 'OPEN_AI_API_KEY' env var is not defined
+        :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY' env var is not defined
         """
         super().__init__(model)
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
@@ -120,7 +120,7 @@ class AsyncOpenAIClient(AsyncModelClient):
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
-        :return: Chat completion or stream
+        :return: Chat completion
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against true stream
@@ -135,7 +135,7 @@ class AsyncOpenAIClient(AsyncModelClient):
                                    conversation: Conversation,
                                    **prompt_kwargs: Any) -> AsyncStream[ChatCompletionChunk]:
         """
-        Prompt a model for OpenAI chat completion
+        Prompt a model for a streamed OpenAI chat completion
 
         :param conversation: Messages to send to llm
         :param prompt_kwargs: kwargs for chat
@@ -167,8 +167,8 @@ class AsyncOpenAIClient(AsyncModelClient):
         """
         Verify OpenAI key is valid and has access to the requested model
 
-        :raises InvalidAPIKeyException: If the OpenAI key is invalid
-        :raises ModelNotFoundExecution: If requested model does not exist
+        :raises InvalidAPIKeyError: If the OpenAI key is invalid
+        :raises ModelNotFoundError: If requested model does not exist
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:

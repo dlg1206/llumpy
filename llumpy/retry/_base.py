@@ -17,9 +17,9 @@ class _FormatMixIn(ABC):
     @property
     def _retry_on(self) -> Tuple[Type[Exception], ...]:
         """
-        Handled executions to retry on
+        Exceptions to retry on
 
-        :return: Generic exception
+        :return: Tuple of exception types to retry on
         """
         return (Exception,)
 

@@ -1,6 +1,6 @@
 [project]
 name = "llumpy"
-version = "0.0.1"
+version = "1.0.0"
 authors = [
     { name = "Derek Garcia" },
 ]
