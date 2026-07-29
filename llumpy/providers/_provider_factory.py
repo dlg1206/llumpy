@@ -68,20 +68,26 @@ class ProviderFactory:
                model_tag: str | None = None,
                *,
                server_url: str | None = None,
-               defer_download: bool = False) -> OllamaClient:
+               defer_download: bool = False,
+               skip_wakeup: bool = False) -> OllamaClient:
         """
         Create new Ollama client
 
-        :param model_name: Name of Ollama `model <https://ollama.com/search>`
+        :param model_name: Name of Ollama `model <https://ollama.com/search>`_
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         :param defer_download: Defer model download if not already downloaded (Default: False)
+        :param skip_wakeup: Skip sending a wake-up prompt to warm up the LLM (Default: False)
+        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         :return: :class:`OllamaClient`
         """
         client = _validate(OllamaClient(model_name, model_tag, server_url))
         # download if requested
         if not defer_download:
             client.download_model()
+        # wakeup if requested
+        if not skip_wakeup:
+            client.wakeup()
         return client
 
     @staticmethod
@@ -89,20 +95,26 @@ class ProviderFactory:
                            model_tag: str | None = None,
                            *,
                            server_url: str | None = None,
-                           defer_download: bool = False) -> AsyncOllamaClient:
+                           defer_download: bool = False,
+                           skip_wakeup: bool = False) -> AsyncOllamaClient:
         """
         Create new Ollama client
 
-        :param model_name: Name of Ollama `model <https://ollama.com/search>`
+        :param model_name: Name of Ollama `model <https://ollama.com/search>`_
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         :param defer_download: Defer model download if not already downloaded (Default: False)
+        :param skip_wakeup: Skip sending a wake-up prompt to warm up the LLM (Default: False)
+        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         :return: :class:`AsyncOllamaClient`
         """
         client = await _async_validate(AsyncOllamaClient(model_name, model_tag, server_url))
         # download if requested
         if not defer_download:
             await client.download_model()
+        # wakeup if requested
+        if not skip_wakeup:
+            await client.wakeup()
         return client
 
 
