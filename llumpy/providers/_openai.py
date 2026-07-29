@@ -13,7 +13,6 @@ from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key, InvalidAPIKeyError, ModelNotFoundError
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
-OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 
 class OpenAIClient(ModelClient):
@@ -21,7 +20,7 @@ class OpenAIClient(ModelClient):
 
     _vendor_client: OpenAI
 
-    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None):
         """
         Initialize connection to OpenAI compatible server
 
@@ -102,7 +101,7 @@ class AsyncOpenAIClient(AsyncModelClient):
 
     _vendor_client: AsyncOpenAI
 
-    def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None):
         """
         Initialize connection to OpenAI compatible server
 

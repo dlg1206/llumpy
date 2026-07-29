@@ -109,8 +109,8 @@ llama3_8b.user(file="prompts/user.prompt").prompt()
 
 ### Retry Handler Param
 
-If the LLM response should pass a test to ensure it is formatted correctly, includes required data, etc, the {py:class}
-`~llumpy.retry.RetryHandler` can be used to automatically reprompt the LLM with same conversation (See
+If the LLM response should pass a test to ensure it is formatted correctly, includes required data, etc, 
+the {py:class}`~llumpy.retry.RetryHandler` can be used to automatically reprompt the LLM with same conversation (See
 [Custom Retry Handlers](../advanced_usage/custom_retry_handlers.md)). The `retries` param can also be used if requested
 (Default: 5).
 

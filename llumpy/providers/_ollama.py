@@ -77,7 +77,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
     Interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
+    def __init__(self, model_name: str, model_tag: str | None = None, server_url: str | None = None):
         """
         Create new Ollama Client
         Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
@@ -86,6 +86,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
+        model_tag = model_tag or DEFAULT_MODEL_TAG
         base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
@@ -148,7 +149,7 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
     Async interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
+    def __init__(self, model_name: str, model_tag: str | None = None, server_url: str | None = None):
         """
         Create new Ollama Client
         Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
@@ -157,6 +158,7 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
+        model_tag = model_tag or DEFAULT_MODEL_TAG
         base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
