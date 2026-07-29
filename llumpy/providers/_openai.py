@@ -19,6 +19,8 @@ OPENAI_BASE_URL = "https://api.openai.com/v1"
 class OpenAIClient(ModelClient):
     """Client interface for interacting with OpenAI API"""
 
+    _vendor_client: OpenAI
+
     def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
@@ -28,11 +30,10 @@ class OpenAIClient(ModelClient):
         :param base_url: URL of api server (Default: OpenAI)
         :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY' env var is not defined
         """
-        super().__init__(model)
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
-        self._model_client = OpenAI(**params)
+        super().__init__(model, OpenAI(**params))
 
     def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """
@@ -44,7 +45,7 @@ class OpenAIClient(ModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against true stream
-        return cast(ChatCompletion, self._model_client.chat.completions.create(
+        return cast(ChatCompletion, self._vendor_client.chat.completions.create(
             model=self._model,
             messages=messages,
             stream=False,
@@ -61,7 +62,7 @@ class OpenAIClient(ModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against false stream
-        return cast(Stream[ChatCompletionChunk], self._model_client.chat.completions.create(
+        return cast(Stream[ChatCompletionChunk], self._vendor_client.chat.completions.create(
             model=self._model,
             messages=messages,
             stream=True,
@@ -87,7 +88,7 @@ class OpenAIClient(ModelClient):
         :raises PermissionDeniedError: If key does not have access to requested model
         """
         try:
-            self._model_client.models.retrieve(self._model)
+            self._vendor_client.models.retrieve(self._model)
         except AuthenticationError as e:
             raise InvalidAPIKeyError('OpenAI') from e
         except NotFoundError as e:
@@ -99,6 +100,8 @@ class OpenAIClient(ModelClient):
 class AsyncOpenAIClient(AsyncModelClient):
     """Async client interface for interacting with OpenAI API"""
 
+    _vendor_client: AsyncOpenAI
+
     def __init__(self, model: str, api_key: str | None = None, base_url: str = OPENAI_BASE_URL):
         """
         Initialize connection to OpenAI compatible server
@@ -108,11 +111,10 @@ class AsyncOpenAIClient(AsyncModelClient):
         :param base_url: URL of api server (Default: OpenAI)
         :raises EnvironmentError: api_key is none and the 'OPENAI_API_KEY' env var is not defined
         """
-        super().__init__(model)
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
-        self._model_client = AsyncOpenAI(**params)
+        super().__init__(model, AsyncOpenAI(**params))
 
     async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
         """

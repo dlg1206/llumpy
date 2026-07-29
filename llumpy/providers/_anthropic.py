@@ -21,15 +21,16 @@ ANTHROPIC_MAX_TOKENS = 8096
 class AnthropicClient(ModelClient):
     """Client interface for interacting with Anthropic API"""
 
+    _vendor_client: Anthropic
+
     def __init__(self, model: str):
         """
-        Initialize connection to Anthropic
+        Internal initialize connection to Anthropic
 
         :param model: LLM to use
         :raises EnvironmentError: If the 'ANTHROPIC_API_KEY' env var is not defined
         """
-        super().__init__(model)
-        self._model_client = Anthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
+        super().__init__(model, Anthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV)))
 
     def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
@@ -43,7 +44,7 @@ class AnthropicClient(ModelClient):
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
         prompt_kwargs.pop("stream", None)  # guard against true stream
-        return cast(Message, self._model_client.messages.create(
+        return cast(Message, self._vendor_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
             messages=non_system,
@@ -65,7 +66,7 @@ class AnthropicClient(ModelClient):
         non_system = [m for m in messages if m['role'] != 'system']
         prompt_kwargs.pop("stream", None)  # guard against false stream
         return cast(Stream[RawMessageStreamEvent],
-                    self._model_client.messages.create(
+                    self._vendor_client.messages.create(
                         model=self._model,
                         max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
                         messages=non_system,
@@ -112,6 +113,8 @@ class AnthropicClient(ModelClient):
 class AsyncAnthropicClient(AsyncModelClient):
     """Async client interface for interacting with Anthropic API"""
 
+    _vendor_client: AsyncAnthropic
+
     def __init__(self, model: str):
         """
         Initialize connection to Anthropic
@@ -119,8 +122,7 @@ class AsyncAnthropicClient(AsyncModelClient):
         :param model: LLM to use
         :raises EnvironmentError: If the 'ANTHROPIC_API_KEY' env var is not defined
         """
-        super().__init__(model)
-        self._model_client = AsyncAnthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV))
+        super().__init__(model, AsyncAnthropic(api_key=load_api_key(ANTHROPIC_API_KEY_ENV)))
 
     async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Message:
         """
