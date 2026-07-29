@@ -25,9 +25,7 @@ MODEL_VIEW_ENDPOINT = "api/show"
 
 
 class InvalidOllamaServerError(ConnectionError):
-    """
-    Failed to connect to Ollama server
-    """
+    """Failed to connect to Ollama server"""
 
     def __init__(self, ollama_url: str):
         """
@@ -37,6 +35,21 @@ class InvalidOllamaServerError(ConnectionError):
         """
         super().__init__(f"Failed to connect to ollama server at '{ollama_url}'")
         self.ollama_url = ollama_url
+
+
+class ModelNotDownloadedError(RuntimeError):
+    """Attempted to prompt a model that is not available on the server"""
+
+    def __init__(self, ollama_url: str, model: str):
+        """
+        Failed to connect to Ollama server
+
+        :param ollama_url: URL of ollama server
+        :param model: Requested model
+        """
+        super().__init__(f"Model '{model}' is not available at '{ollama_url}' - has the model been downloaded?")
+        self.ollama_url = ollama_url
+        self.model = model
 
 
 class _OllamaClientMixin:
@@ -77,7 +90,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
     Interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
+    def __init__(self, model_name: str, model_tag: str | None = None, server_url: str | None = None):
         """
         Create new Ollama Client
         Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
@@ -86,6 +99,7 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
+        model_tag = model_tag or DEFAULT_MODEL_TAG
         base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
@@ -142,13 +156,25 @@ class OllamaClient(_OllamaClientMixin, OpenAIClient):
                 raise ModelNotFoundError('Ollama', self._model) from e
             raise
 
+    def wakeup(self) -> None:
+        """
+        Send a simple wakeup prompt to warm up the LLM.
+        Useful before actually user prompting to prevent delay on he first prompt
+
+        :raises ModelNotDownloadedError: If the request model has not been downloaded or available
+        """
+        # model not available
+        if not self._is_model_downloaded():
+            raise ModelNotDownloadedError(self._ollama_server, self.model)
+        self.prompt_one('hi', max_completion_tokens=1)
+
 
 class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
     """
     Async interface for using Ollama API
     """
 
-    def __init__(self, model_name: str, model_tag: str = DEFAULT_MODEL_TAG, server_url: str | None = None):
+    def __init__(self, model_name: str, model_tag: str | None = None, server_url: str | None = None):
         """
         Create new Ollama Client
         Server URL is resolved from the param, then the OLLAMA_SERVER_URL env var, then the default
@@ -157,6 +183,7 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
         :param model_tag: Optional model tag (Default: latest)
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         """
+        model_tag = model_tag or DEFAULT_MODEL_TAG
         base_url = self._init_ollama(model_name, model_tag, server_url)
         super().__init__(model=f"{model_name}:{model_tag}", api_key="ollama", base_url=base_url)
 
@@ -215,3 +242,15 @@ class AsyncOllamaClient(_OllamaClientMixin, AsyncOpenAIClient):
                 if e.response.status_code == 404:
                     raise ModelNotFoundError('Ollama', self._model) from e
                 raise
+
+    async def wakeup(self) -> None:
+        """
+        Send a simple wakeup prompt to warm up the LLM.
+        Useful before actually user prompting to prevent delay on he first prompt
+
+        :raises ModelNotDownloadedError: If the request model has not been downloaded or available
+        """
+        # model not available
+        if not await self._is_model_downloaded():
+            raise ModelNotDownloadedError(self._ollama_server, self.model)
+        await self.prompt_one('hi', max_completion_tokens=1)

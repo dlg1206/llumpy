@@ -38,17 +38,17 @@ llumpy @ git+https://github.com/dlg1206/llumpy.git@1.0.0
 1. Create a client
 
 ```python
-from llumpy.providers import AnthropicClient, OpenAIClient, OllamaClient
-
-# API key env var: OPENAI_API_KEY
-gpt = OpenAIClient('gpt-5.4')
+from llumpy.providers import ProviderFactory
 
 # API key env var: ANTHROPIC_API_KEY
-claude = AnthropicClient('claude-sonnet-4-6')
+claude = ProviderFactory.anthropic('claude-sonnet-4-6')
+
+# API key env var: OPENAI_API_KEY
+gpt = ProviderFactory.openai('gpt-5.4')
 
 # Ollama server url env var: OLLAMA_SERVER_URL (Default: http://localhost:11434)
-llama3_latest = OllamaClient('llama3')  # default ':latest'
-llama3_8b = OllamaClient('llama3', '8b')
+llama3_latest = ProviderFactory.ollama('llama3')  # default ':latest'
+llama3_8b = ProviderFactory.ollama('llama3', '8b')
 ```
 
 > [!WARNING]
@@ -58,9 +58,9 @@ llama3_8b = OllamaClient('llama3', '8b')
 2. Prompt
 
 ```python
-from llumpy.providers import OllamaClient
+from llumpy.providers import ProviderFactory
 
-llama3_8b = OllamaClient('llama3', '8b')
+llama3_8b = ProviderFactory.ollama('llama3', '8b')
 response = llama3_8b.prompt_one("Hello!")
 print(response)
 ```

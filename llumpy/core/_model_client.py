@@ -117,13 +117,15 @@ class _SingleUseConversationMixIn:
 class ModelClient(_SingleUseConversationMixIn, ABC):
     """Abstract base class for synchronous model clients"""
 
-    def __init__(self, model: str):
+    def __init__(self, model: str, vendor_client: Any):
         """
         Create new client
 
-        :param model: Model to use
+        :param model: Name of model to use
+        :param vendor_client: Vendor specific client interface to LLM
         """
         self._model = model
+        self._vendor_client = vendor_client
 
     @abstractmethod
     def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> Any:
@@ -136,6 +138,10 @@ class ModelClient(_SingleUseConversationMixIn, ABC):
     @abstractmethod
     def extract_text(self, response: Any) -> str | None:
         """Extract text from vendor-specific response object"""
+
+    @abstractmethod
+    def validate(self) -> None:
+        """Validate the client is ready to use"""
 
     def prompt_one(self,
                    message: str,
@@ -187,10 +193,6 @@ class ModelClient(_SingleUseConversationMixIn, ABC):
         """
         # wrapper for vendor prompt
         return self.vendor_prompt_stream(conversation, **prompt_kwargs)
-
-    @abstractmethod
-    def validate(self) -> None:
-        """Validate the client is ready to use"""
 
     @property
     def model(self) -> str:
