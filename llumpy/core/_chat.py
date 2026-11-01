@@ -1,7 +1,7 @@
 """
 File: _chat.py
 
-Description: Preserve chat history with model
+Description: Model client wrapper to preserve chat history
 
 @author Derek Garcia
 """
@@ -9,12 +9,11 @@ import copy
 from abc import ABC
 from typing import Any
 
-from retry import AsyncRetryHandler
-from . import AsyncModelClient
+from ._async_model_client import AsyncModelClient
 from ._conversation_builder import _UserStep, _UserOrBuildStep, ConversationBuilder
 from ._model_client import ModelClient
 from ._models import History
-from ..retry import RetryHandler, DEFAULT_MAX_RETRIES
+from ..retry import RetryHandler, AsyncRetryHandler, DEFAULT_MAX_RETRIES
 
 type Context = _UserStep | _UserOrBuildStep
 
@@ -78,8 +77,33 @@ class Chat(_Chat):
         # send a user message with previous messages
         self._chat = self._chat.user(content, file=file)
         reply = self._client.prompt_many(self._chat.build(), handler=handler, retries=retries, **prompt_kwargs)
+        # remember the response
         self._chat = self._chat.assistant(reply)
         return reply
+
+    def stream(self,
+               content: str | None = None,
+               *,
+               file: str | None = None,
+               **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model and stream the response
+
+        :param content: Content of user message (Default: None)
+        :param file: File to read content from (Default: None)
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat stream
+        """
+        self._chat = self._chat.user(content, file=file)
+        text_chunks: list[str] = []
+        # wrap stream to remember response
+        for chunk in self._client.prompt_stream(self._chat.build(), **prompt_kwargs):
+            text_chunk = self._client.extract_text(chunk)
+            if text_chunk:
+                text_chunks.append(text_chunk)
+            yield chunk
+        # remember the response
+        self._chat = self._chat.assistant("".join(text_chunks))
 
 
 class AsyncChat(_Chat):
@@ -115,5 +139,30 @@ class AsyncChat(_Chat):
         # send a user message with previous messages
         self._chat = self._chat.user(content, file=file)
         reply = await self._client.prompt_many(self._chat.build(), handler=handler, retries=retries, **prompt_kwargs)
+        # remember the response
         self._chat = self._chat.assistant(reply)
         return reply
+
+    async def stream(self,
+                     content: str | None = None,
+                     *,
+                     file: str | None = None,
+                     **prompt_kwargs: Any) -> Any:
+        """
+        Prompt a model and stream the response
+
+        :param content: Content of user message (Default: None)
+        :param file: File to read content from (Default: None)
+        :param prompt_kwargs: kwargs for chat
+        :return: Chat stream
+        """
+        self._chat = self._chat.user(content, file=file)
+        text_chunks: list[str] = []
+        # wrap stream to remember response
+        async for chunk in await self._client.prompt_stream(self._chat.build(), **prompt_kwargs):
+            text_chunk = self._client.extract_text(chunk)
+            if text_chunk:
+                text_chunks.append(text_chunk)
+            yield chunk
+        # remember the response
+        self._chat = self._chat.assistant("".join(text_chunks))
