@@ -117,7 +117,7 @@ If the LLM response should pass a test to ensure it is formatted correctly, incl
 ```python
 from llumpy.providers import AsyncOllamaClient
 from llumpy.retry import AsyncJSONRetryHandler
-from llumpy.core import Conversation
+from llumpy.core import ConversationBuilder
 
 llama3_8b = AsyncOllamaClient('llama3', '8b')
 
@@ -128,7 +128,7 @@ await llama3_8b.prompt_one("Hello!", handler=AsyncJSONRetryHandler(), retries=2)
 await llama3_8b.user("Hello!").prompt(handler=AsyncJSONRetryHandler())
 await llama3_8b.user("Hello!").prompt(handler=AsyncJSONRetryHandler(), retries=2)
 # prompt many
-conversation: Conversation = None
+conversation = ConversationBuilder().user("Hello!").build()
 await llama3_8b.prompt_many(conversation, handler=AsyncJSONRetryHandler())
 await llama3_8b.prompt_many(conversation, handler=AsyncJSONRetryHandler(), retries=2)
 ```
@@ -143,7 +143,7 @@ the actual request, for example `temperature`:
 
 ```python
 from llumpy.providers import AsyncOllamaClient
-from llumpy.core import Conversation
+from llumpy.core import ConversationBuilder
 
 llama3_8b = AsyncOllamaClient('llama3', '8b')
 
@@ -152,10 +152,11 @@ await llama3_8b.prompt_one("Hello!", temperature=1.0)
 # ephemeral prompt
 await llama3_8b.user("Hello!").prompt(temperature=1.0)
 # prompt many
-conversation: Conversation = None
+conversation = ConversationBuilder().user("Hello!").build()
 await llama3_8b.prompt_many(conversation, temperature=1.0)
 # stream
 async for chunk in await llama3_8b.prompt_stream(conversation, temperature=1.0):
+    t = await
     print(llama3_8b.extract_text(chunk), end="_", flush=True)
 ```
 
