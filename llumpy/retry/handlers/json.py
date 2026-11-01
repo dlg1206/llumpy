@@ -17,6 +17,8 @@ JSON_RE = re.compile(r'{[\w\W]*}')
 
 
 class _JSONRetryHandlerBase(ABC):
+    """Base JSON handler"""
+
     @property
     def _retry_on(self) -> Tuple[Type[Exception], ...]:
         """
@@ -32,8 +34,8 @@ class _JSONRetryHandlerBase(ABC):
         Validate the response contains a valid JSON object
 
         :param response: Response text to validate contains JSON
-        :raises JSONDecodeError: If failed to parse JSON from text
         :return: JSON object
+        :raises JSONDecodeError: If failed to parse JSON from text
         """
         match = JSON_RE.search(response.strip())
         if not match:

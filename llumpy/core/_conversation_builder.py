@@ -108,7 +108,6 @@ class ConversationBuilder(_MessagesHolder):
 
         :param content: Content of system message (Default: None)
         :param file: File to read content from (Default: None)
-        :raises ValueError: If neither or both content and file are provided
         :return: User step
         """
         return _UserStep(self._add(Role.SYSTEM, content, file))

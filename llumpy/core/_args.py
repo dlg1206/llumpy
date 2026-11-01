@@ -25,8 +25,8 @@ def _validate_args(content: str | None, file: str | None) -> str:
 
     :param content: LLM content arg
     :param file: File path to LLM content
-    :raises ValueError: If neither or both content and file are provided
     :return: File content or content
+    :raises ValueError: If not content and file are provided or neither are provided
     """
     # neither provided
     if content is None and file is None:
@@ -49,8 +49,8 @@ def load_api_key(env_var: str):
     Load API key from env variable
 
     :param env_var: Environment variable to attempt load key from
-    :raises EnvironmentError: If the env var is not defined
     :returns: API key
+    :raises EnvironmentError: If the env var is not defined
     """
     # ensure API key is present
     api_key = os.getenv(env_var)

@@ -96,7 +96,6 @@ class _SingleUseConversationMixIn:
 
         :param content: Content of system message (Default: None)
         :param file: File to read content from (Default: None)
-        :raises ValueError: If neither or both content and file are provided
         :return: User step
         """
         validated = _validate_args(content, file)

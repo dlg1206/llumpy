@@ -41,8 +41,8 @@ class RetryHandler(_FormatMixIn, ABC):
         :param prompt_fn: Prompt callback function
         :param extract_fn: Prompt text extraction callback function
         :param retries: Number of retries allowed
-        :raises ExceededRetriesError: Exceed the number of permitted retries
         :return: Validated chat response text
+        :raises ExceededRetriesError: Exceed the number of permitted retries
         """
         # attempt generation
         last_exc = None
@@ -72,8 +72,8 @@ class AsyncRetryHandler(_FormatMixIn, ABC):
         :param async_prompt_fn: Async prompt callback function
         :param extract_fn: Prompt text extraction callback function
         :param retries: Number of retries allowed
-        :raises ExceededRetriesError: Exceed the number of permitted retries
         :return: Validated chat response text
+        :raises ExceededRetriesError: Exceed the number of permitted retries
         """
         # attempt generation
         last_exc = None
