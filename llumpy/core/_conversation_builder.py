@@ -8,7 +8,7 @@ Description: Builder to ensure conversations to LLMs are in the correct order
 from typing import List, Literal
 
 from ._args import _validate_args
-from ._models import Role, Message, Conversation
+from ._models import Role, Message, Conversation, History
 
 
 class _BuildMixIn:
@@ -45,6 +45,13 @@ class _MessagesHolder:
         validated = _validate_args(content, file)
         self._messages.append(Message(role, validated))
         return self._messages
+
+    @property
+    def history(self) -> History:
+        """
+        :return: Conversation history
+        """
+        return History(self._messages)
 
 
 class _UserStep(_MessagesHolder):

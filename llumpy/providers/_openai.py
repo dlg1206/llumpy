@@ -125,7 +125,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against true stream
-        return await self._model_client.chat.completions.create(
+        return await self._model_client.message.completions.create(
             model=self._model,
             messages=messages,
             stream=False,
@@ -144,7 +144,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against false stream
-        return await self._model_client.chat.completions.create(
+        return await self._model_client.message.completions.create(
             model=self._model,
             messages=messages,
             stream=True,

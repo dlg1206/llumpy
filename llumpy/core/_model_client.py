@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, List
 
 from ._args import _validate_args
-from ._conversation_builder import ConversationBuilder, _MessagesHolder
+from ._conversation_builder import ConversationBuilder, _MessagesHolder, _UserStep
 from ._models import Conversation, Role, Message
 from ..retry import DEFAULT_MAX_RETRIES, RetryHandler
 
