@@ -2,7 +2,7 @@
 
 from ._args import load_api_key as load_api_key
 from ._async_model_client import AsyncModelClient as AsyncModelClient
-from ._chat import Chat as Chat
+from ._chat import (Chat as Chat, AsyncChat as AsyncChat)
 from ._conversation_builder import ConversationBuilder as ConversationBuilder
 from ._exceptions import (InvalidAPIKeyError as InvalidAPIKeyError,
                           ModelNotFoundError as ModelNotFoundError)
@@ -15,7 +15,7 @@ from ._models import (Role as Role,
 __all__ = [
     "ConversationBuilder",
     "Role", "Message", "History", "Conversation",
-    "Chat",
+    "Chat", "AsyncChat",
     "ModelClient", "AsyncModelClient", "load_api_key",
     "InvalidAPIKeyError", "ModelNotFoundError"
 ]
