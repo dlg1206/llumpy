@@ -44,14 +44,14 @@ class AnthropicClient(ModelClient):
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
         prompt_kwargs.pop("stream", None)  # guard against true stream
-        return cast(Message, self._vendor_client.messages.create(
+        return self._vendor_client.messages.create(
             model=self._model,
             max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
             messages=non_system,
             stream=False,
             **({"system": system} if system else {}),
             **prompt_kwargs
-        ))
+        )
 
     def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[RawMessageStreamEvent]:
         """
@@ -65,15 +65,14 @@ class AnthropicClient(ModelClient):
         system = next((m['content'] for m in messages if m['role'] == 'system'), None)
         non_system = [m for m in messages if m['role'] != 'system']
         prompt_kwargs.pop("stream", None)  # guard against false stream
-        return cast(Stream[RawMessageStreamEvent],
-                    self._vendor_client.messages.create(
-                        model=self._model,
-                        max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
-                        messages=non_system,
-                        stream=True,
-                        **({"system": system} if system else {}),
-                        **prompt_kwargs
-                    ))
+        return self._vendor_client.messages.create(
+            model=self._model,
+            max_tokens=prompt_kwargs.pop('max_tokens', ANTHROPIC_MAX_TOKENS),
+            messages=non_system,
+            stream=True,
+            **({"system": system} if system else {}),
+            **prompt_kwargs
+        )
 
     def extract_text(self, response: Message | RawMessageStreamEvent) -> str | None:
         """

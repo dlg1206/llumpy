@@ -5,7 +5,7 @@ Description: Client for interacting with OpenAI API
 
 @author Derek Garcia
 """
-from typing import List, Any, cast
+from typing import List, Any
 
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
@@ -44,12 +44,12 @@ class OpenAIClient(ModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against true stream
-        return cast(ChatCompletion, self._vendor_client.chat.completions.create(
+        return self._vendor_client.chat.completions.create(
             model=self._model,
             messages=messages,
             stream=False,
             **prompt_kwargs
-        ))
+        )
 
     def vendor_prompt_stream(self, conversation: Conversation, **prompt_kwargs: Any) -> Stream[ChatCompletionChunk]:
         """
@@ -61,12 +61,12 @@ class OpenAIClient(ModelClient):
         """
         messages: List[Any] = conversation.to_dicts()
         prompt_kwargs.pop("stream", None)  # guard against false stream
-        return cast(Stream[ChatCompletionChunk], self._vendor_client.chat.completions.create(
+        return self._vendor_client.chat.completions.create(
             model=self._model,
             messages=messages,
             stream=True,
             **prompt_kwargs
-        ))
+        )
 
     def extract_text(self, response: ChatCompletion | ChatCompletionChunk) -> str | None:
         """
