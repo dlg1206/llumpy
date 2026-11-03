@@ -5,4 +5,5 @@
 
 providers
 prompting
+chat
 ```
