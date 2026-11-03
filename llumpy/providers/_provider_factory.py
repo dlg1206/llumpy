@@ -5,15 +5,11 @@ Description: Create validated provider clients
 
 @author Derek Garcia
 """
-from typing import TypeVar
 
 from ._anthropic import AnthropicClient, AsyncAnthropicClient
 from ._ollama import OllamaClient, AsyncOllamaClient
 from ._openai import OpenAIClient, AsyncOpenAIClient
 from ..core import ModelClient, AsyncModelClient
-
-S = TypeVar("S", bound=ModelClient)
-A = TypeVar("A", bound=AsyncModelClient)
 
 
 class ProviderFactory:
@@ -118,7 +114,7 @@ class ProviderFactory:
         return client
 
 
-def _validate(client: S) -> S:
+def _validate[S: ModelClient](client: S) -> S:
     """
     Execute a client's validation function
 
@@ -129,7 +125,7 @@ def _validate(client: S) -> S:
     return client
 
 
-async def _async_validate(client: A) -> A:
+async def _async_validate[A: AsyncModelClient](client: A) -> A:
     """
     Execute an async client's validation function
 

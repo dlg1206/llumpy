@@ -12,7 +12,8 @@ requires-python = ">=3.11"
 dependencies = [
     "openai==3.42.1",
     "anthropic==2.3.0",
-    "httpx==0.28.1"
+    "httpx==0.28.1",
+    "tiktoken==0.14.0"
 ]
 
 [project.optional-dependencies]

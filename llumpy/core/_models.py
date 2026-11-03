@@ -5,9 +5,8 @@ Description: Datastructures for messages to send to LLMs
 
 @author Derek Garcia
 """
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import List, Dict
 
 
 class Role(StrEnum):
@@ -16,6 +15,9 @@ class Role(StrEnum):
     USER = 'user'
     ASSISTANT = 'assistant'
 
+    def __str__(self) -> str:
+        return self.value
+
 
 @dataclass(frozen=True)
 class Message:
@@ -23,19 +25,19 @@ class Message:
     role: Role
     content: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict[str, str]:
         """
         :return: DTO as dict
         """
-        return asdict(self)
+        return {'role': self.role.value, 'content': self.content}
 
 
 @dataclass(frozen=True)
 class History:
     """Immutable history with LLM"""
-    messages: List[Message]
+    messages: list[Message]
 
-    def to_dicts(self) -> List[Dict[str, str]]:
+    def to_dicts(self) -> list[dict[str, str]]:
         """
         :return: Messages as dicts for API
         """

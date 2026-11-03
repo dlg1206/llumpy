@@ -7,17 +7,46 @@ Description: Client for interacting with OpenAI API
 """
 from typing import List, Any
 
+import tiktoken
 from openai import AuthenticationError, NotFoundError, PermissionDeniedError, Stream, AsyncOpenAI, OpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 
-from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key, InvalidAPIKeyError, ModelNotFoundError
+from ..core import Conversation, ModelClient, AsyncModelClient, load_api_key, InvalidAPIKeyError, ModelNotFoundError, \
+    Tokenizer, History
 
 OPENAI_API_KEY_ENV = "OPENAI_API_KEY"
+
+
+class OpenAITokenizer(Tokenizer):
+    """"Estimate the amount of tokens of text"""
+
+    def __init__(self, model: str):
+        """
+        Create new OpenAI tokenizer
+
+        :param model: Name of OpenAI model
+        """
+        self._model = model
+
+    def count_tokens(self, text: str | History) -> int:
+        """
+        Calculate the number of tokens a text or chat history
+
+        :param text: Text or history
+        :return: Number of tokens
+        """
+        enc = tiktoken.encoding_for_model(self._model)
+        # just one text
+        if isinstance(text, str):
+            return len(enc.encode(text))
+        # sum all messages
+        return sum(len(enc.encode(m.content)) for m in text)
 
 
 class OpenAIClient(ModelClient):
     """Client interface for interacting with OpenAI API"""
 
+    # placeholder for model client
     _vendor_client: OpenAI
 
     def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None):
@@ -32,6 +61,7 @@ class OpenAIClient(ModelClient):
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
+        self._tokenizer = OpenAITokenizer(model)
         super().__init__(model, OpenAI(**params))
 
     def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
@@ -95,10 +125,18 @@ class OpenAIClient(ModelClient):
         except PermissionDeniedError as e:
             raise e
 
+    @property
+    def tokenizer(self) -> OpenAITokenizer:
+        """
+        :return: OpenAI tokenizer
+        """
+        return self._tokenizer
+
 
 class AsyncOpenAIClient(AsyncModelClient):
     """Async client interface for interacting with OpenAI API"""
 
+    # placeholder for model client
     _vendor_client: AsyncOpenAI
 
     def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None):
@@ -113,6 +151,7 @@ class AsyncOpenAIClient(AsyncModelClient):
         params = {'api_key': api_key if api_key else load_api_key(OPENAI_API_KEY_ENV)}
         if base_url:
             params['base_url'] = base_url
+        self._tokenizer = OpenAITokenizer(model)
         super().__init__(model, AsyncOpenAI(**params))
 
     async def vendor_prompt(self, conversation: Conversation, **prompt_kwargs: Any) -> ChatCompletion:
@@ -180,3 +219,10 @@ class AsyncOpenAIClient(AsyncModelClient):
             raise ModelNotFoundError('OpenAI', self.model) from e
         except PermissionDeniedError as e:
             raise e
+
+    @property
+    def tokenizer(self) -> OpenAITokenizer:
+        """
+        :return: OpenAI tokenizer
+        """
+        return self._tokenizer
