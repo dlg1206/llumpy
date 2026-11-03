@@ -15,6 +15,7 @@
 
 - [One](https://dlg1206.github.io/llumpy/usage/prompting.html#one-shot)
   or [Few](https://dlg1206.github.io/llumpy/usage/prompting.html#few-shot) Shot Prompting
+- [Continuous Chats](http://dlg1206.github.io/usage/chat.html)
 - [Streaming LLM Responses](https://dlg1206.github.io/llumpy/usage/prompting.html#streaming-response)
 - [Load Prompts From File](https://dlg1206.github.io/llumpy/usage/prompting.html#file-param)
 - [Asynchronous Variants](https://dlg1206.github.io/llumpy/async/index.html)
@@ -24,13 +25,13 @@
 ## Installation
 
 ```bash
-pip install git+https://github.com/dlg1206/llumpy.git@1.0.0
+pip install git+https://github.com/dlg1206/llumpy.git@1.1.0
 ```
 
 or add to `requirements.txt`
 
 ```txt
-llumpy @ git+https://github.com/dlg1206/llumpy.git@1.0.0
+llumpy @ git+https://github.com/dlg1206/llumpy.git@1.1.0
 ```
 
 ## Quickstart

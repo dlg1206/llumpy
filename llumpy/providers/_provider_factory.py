@@ -5,15 +5,11 @@ Description: Create validated provider clients
 
 @author Derek Garcia
 """
-from typing import TypeVar
 
 from ._anthropic import AnthropicClient, AsyncAnthropicClient
 from ._ollama import OllamaClient, AsyncOllamaClient
 from ._openai import OpenAIClient, AsyncOpenAIClient
 from ..core import ModelClient, AsyncModelClient
-
-S = TypeVar("S", bound=ModelClient)
-A = TypeVar("A", bound=AsyncModelClient)
 
 
 class ProviderFactory:
@@ -78,8 +74,8 @@ class ProviderFactory:
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         :param defer_download: Defer model download if not already downloaded (Default: False)
         :param skip_wakeup: Skip sending a wake-up prompt to warm up the LLM (Default: False)
-        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         :return: :class:`OllamaClient`
+        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         """
         client = _validate(OllamaClient(model_name, model_tag, server_url))
         # download if requested
@@ -105,8 +101,8 @@ class ProviderFactory:
         :param server_url: Optional URL of the ollama server (Default: http://localhost:11434)
         :param defer_download: Defer model download if not already downloaded (Default: False)
         :param skip_wakeup: Skip sending a wake-up prompt to warm up the LLM (Default: False)
-        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         :return: :class:`AsyncOllamaClient`
+        :raises ModelNotDownloadedError: If wake-up and model has not been downloaded
         """
         client = await _async_validate(AsyncOllamaClient(model_name, model_tag, server_url))
         # download if requested
@@ -118,7 +114,7 @@ class ProviderFactory:
         return client
 
 
-def _validate(client: S) -> S:
+def _validate[S: ModelClient](client: S) -> S:
     """
     Execute a client's validation function
 
@@ -129,7 +125,7 @@ def _validate(client: S) -> S:
     return client
 
 
-async def _async_validate(client: A) -> A:
+async def _async_validate[A: AsyncModelClient](client: A) -> A:
     """
     Execute an async client's validation function
 

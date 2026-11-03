@@ -32,7 +32,9 @@ class _AsyncPromptMixIn:
         :param prompt_kwargs: kwargs for chat
         :return: Completed chat response text or parsed object from retry handler
         """
-        return await self._client.prompt_many(Conversation(self._messages), handler=handler, retries=retries,
+        return await self._client.prompt_many(Conversation(self._messages),
+                                              handler=handler,
+                                              retries=retries,
                                               **prompt_kwargs)
 
 

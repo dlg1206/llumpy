@@ -1,3 +1,5 @@
+from core import ConversationBuilder
+
 # Prompting
 
 ## One-shot
@@ -117,7 +119,7 @@ the {py:class}`~llumpy.retry.RetryHandler` can be used to automatically reprompt
 ```python
 from llumpy.providers import OllamaClient
 from llumpy.retry import JSONRetryHandler
-from llumpy.core import Conversation
+from llumpy.core import ConversationBuilder
 
 llama3_8b = OllamaClient('llama3', '8b')
 
@@ -128,7 +130,7 @@ llama3_8b.prompt_one("Hello!", handler=JSONRetryHandler(), retries=2)
 llama3_8b.user("Hello!").prompt(handler=JSONRetryHandler())
 llama3_8b.user("Hello!").prompt(handler=JSONRetryHandler(), retries=2)
 # prompt many
-conversation: Conversation = None
+conversation = ConversationBuilder().user("Hello!").build()
 llama3_8b.prompt_many(conversation, handler=JSONRetryHandler())
 llama3_8b.prompt_many(conversation, handler=JSONRetryHandler(), retries=2)
 ```
@@ -143,7 +145,7 @@ the actual request, for example `temperature`:
 
 ```python
 from llumpy.providers import OllamaClient
-from llumpy.core import Conversation
+from llumpy.core import ConversationBuilder
 
 llama3_8b = OllamaClient('llama3', '8b')
 
@@ -152,7 +154,7 @@ llama3_8b.prompt_one("Hello!", temperature=1.0)
 # ephemeral prompt
 llama3_8b.user("Hello!").prompt(temperature=1.0)
 # prompt many
-conversation: Conversation = None
+conversation = ConversationBuilder().user("Hello!").build()
 llama3_8b.prompt_many(conversation, temperature=1.0)
 # stream
 for chunk in llama3_8b.prompt_stream(conversation, temperature=1.0):
