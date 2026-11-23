@@ -10,8 +10,8 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
-    "openai==3.50.0",
-    "anthropic==2.8.0",
+    "openai==3.57.0",
+    "anthropic==2.11.0",
     "httpx==0.28.1",
     "tiktoken==0.14.0"
 ]
